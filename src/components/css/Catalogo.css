@@ -1,0 +1,717 @@
+/* Catalogo.css - B2B Clean Light Theme */
+
+:root {
+  --b2b-bg: #f5f7fa;
+  --b2b-surface: #ffffff;
+  --b2b-border: #e2e8f0;
+  --b2b-text-dark: #1e293b;
+  --b2b-text-muted: #64748b;
+  --b2b-accent: #10b981;
+  --b2b-accent-hover: #059669;
+  --b2b-radius: 8px;
+}
+
+[data-theme="dark"] {
+  --b2b-bg: #0f172a;
+  --b2b-surface: #1e293b;
+  --b2b-border: #334155;
+  --b2b-text-dark: #f8fafc;
+  --b2b-text-muted: #94a3b8;
+  --b2b-accent: #10b981;
+  --b2b-accent-hover: #059669;
+}
+
+[data-theme="dark"] .b2b-card-image {
+  background: var(--b2b-surface);
+}
+
+[data-theme="dark"] .b2b-badge {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+[data-theme="dark"] .b2b-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+[data-theme="dark"] .b2b-btn:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: #10b981;
+}
+
+[data-theme="dark"] .b2b-card-actions input {
+  background: #020617;
+  border-color: rgba(148, 163, 184, 0.28);
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .b2b-card-actions input::placeholder {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .b2b-card-actions input::-webkit-outer-spin-button,
+[data-theme="dark"] .b2b-card-actions input::-webkit-inner-spin-button {
+  filter: invert(1);
+  opacity: 1;
+}
+
+.b2b-store-page {
+  /* Override Midnight theme strictly for this sub-tree */
+  background-color: var(--b2b-bg) !important;
+  color: var(--b2b-text-dark) !important;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure the public header adapts a bit to the light theme, or at least isolates it.
+   Since PublicHeader is used on other pages we won't rewrite it entirely,
+   but we will force the main container into light mode. */
+
+.b2b-main {
+  flex-grow: 1;
+  display: flex;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 24px;
+  gap: 24px;
+}
+
+/* --- SIDEBAR --- */
+.b2b-sidebar {
+  width: 260px;
+  flex-shrink: 0;
+}
+
+.b2b-sidebar-card {
+  background: var(--b2b-surface);
+  border-radius: var(--b2b-radius);
+  border: 1px solid var(--b2b-border);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.b2b-sidebar h3 {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--b2b-text-dark);
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
+.b2b-filter-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.b2b-filter-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  cursor: pointer;
+  color: var(--b2b-text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.b2b-filter-item:hover, .b2b-filter-item.active {
+  color: var(--b2b-text-dark);
+  font-weight: 700;
+}
+
+.b2b-filter-count {
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--b2b-text-muted);
+}
+
+/* --- CONTENT AREA & TOP BAR --- */
+.b2b-content {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.b2b-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--b2b-surface);
+  padding: 16px 20px;
+  border-radius: var(--b2b-radius);
+  border: 1px solid var(--b2b-border);
+  margin-bottom: 24px;
+}
+
+.b2b-topbar-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--b2b-text-dark);
+}
+
+.b2b-search-wrap {
+  display: flex;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid var(--b2b-border);
+  border-radius: var(--b2b-radius);
+  padding: 0 12px;
+  width: 320px;
+}
+
+.b2b-search-wrap svg {
+  color: var(--b2b-text-muted);
+}
+
+.b2b-search-wrap input {
+  border: none;
+  background: transparent;
+  padding: 10px;
+  width: 100%;
+  color: var(--b2b-text-dark);
+  outline: none;
+  font-size: 14px;
+}
+
+/* --- PRODUCT GRID --- */
+.b2b-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.b2b-card {
+  background: var(--b2b-surface);
+  border-radius: var(--b2b-radius);
+  border: 1px solid var(--b2b-border);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.b2b-card:hover {
+  box-shadow: 0 12px 24px rgba(0,0,0,0.06);
+  border-color: #cbd5e1;
+}
+
+.b2b-card-image {
+  height: 220px;
+  width: 100%;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.98), rgba(241, 245, 249, 0.94)),
+    white;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.b2b-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 10px;
+  filter: drop-shadow(0 12px 22px rgba(15, 23, 42, 0.12));
+}
+
+.b2b-wishlist-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: color 0.2s;
+}
+
+.b2b-wishlist-btn.active {
+  color: #ef4444; /* red for heart */
+}
+
+.b2b-wishlist-btn:hover {
+  color: #f87171;
+}
+
+.b2b-card-body {
+  padding: 16px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.b2b-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--b2b-text-dark);
+  margin: 0 0 4px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.b2b-card-id {
+  font-size: 12px;
+  color: var(--b2b-text-muted);
+  margin-bottom: 12px;
+}
+
+.b2b-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.b2b-badge {
+  background: #d1fae5;
+  color: #065f46;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.b2b-card-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--b2b-text-dark);
+  margin-top: auto;
+  margin-bottom: 16px;
+}
+
+.b2b-card-price small {
+  font-size: 12px;
+  color: var(--b2b-text-muted);
+  font-weight: 400;
+}
+
+.b2b-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 8px;
+}
+
+.b2b-card-actions input {
+  border: 1px solid var(--b2b-border);
+  border-radius: 6px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--b2b-text-dark);
+  outline: none;
+}
+
+.b2b-card-actions input:focus {
+  border-color: var(--b2b-accent);
+}
+
+.b2b-btn {
+  background: #ffffff;
+  border: 1px solid var(--b2b-border);
+  color: var(--b2b-text-dark);
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.b2b-btn:hover:not(:disabled) {
+  border-color: var(--b2b-accent);
+  color: var(--b2b-accent);
+}
+
+.b2b-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.wishlist-page__main,
+.cart-page__main {
+  flex: 1;
+}
+
+.wishlist-page__shell,
+.cart-page__shell {
+  padding-top: 1rem;
+  padding-bottom: 2.5rem;
+}
+
+.wishlist-page__empty,
+.cart-page__empty {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(255, 255, 255, 0.92);
+  color: #1e293b;
+  border-radius: 18px;
+  padding: 1rem 1.1rem;
+}
+
+.wishlist-page__empty a,
+.cart-page__empty a {
+  color: #34d399;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.wishlist-services {
+  padding: 1rem 0 3rem;
+}
+
+.wishlist-services__title {
+  margin: 0 0 1.5rem;
+  text-align: center;
+  color: var(--b2b-text-dark);
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.wishlist-service-card {
+  border-radius: 20px;
+  border: 1px solid var(--b2b-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+  box-shadow: 0 18px 30px rgba(15, 23, 42, 0.08);
+}
+
+.wishlist-service-card .card-body {
+  padding: 2rem 1.5rem;
+}
+
+.wishlist-service-card .card-title {
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.wishlist-service-card .card-text {
+  color: #475569;
+}
+
+.wishlist-service-card__icon {
+  color: #34d399;
+}
+
+.commerce-card {
+  border-radius: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+  box-shadow: 0 24px 40px rgba(15, 23, 42, 0.1);
+}
+
+.commerce-card__body {
+  padding: 1.5rem;
+}
+
+.commerce-card h4,
+.commerce-card strong,
+.commerce-card th,
+.commerce-card td,
+.commerce-card span,
+.commerce-card label {
+  color: #0f172a;
+}
+
+.commerce-table {
+  margin: 0;
+  color: #0f172a;
+  --bs-table-bg: transparent;
+  --bs-table-hover-bg: rgba(226, 232, 240, 0.6);
+  --bs-table-hover-color: #0f172a;
+  --bs-table-color: #0f172a;
+  --bs-table-border-color: rgba(148, 163, 184, 0.18);
+}
+
+.commerce-table,
+.commerce-table thead,
+.commerce-table tbody,
+.commerce-table tr,
+.commerce-table th,
+.commerce-table td {
+  background-color: transparent !important;
+}
+
+.commerce-table thead th {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.24);
+  color: #334155;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.commerce-table tbody td {
+  border-color: rgba(148, 163, 184, 0.14);
+  vertical-align: middle;
+  color: #334155;
+}
+
+.commerce-table__actions {
+  white-space: nowrap;
+}
+
+.commerce-action-btn {
+  min-width: 36px;
+  border-radius: 10px;
+}
+
+.commerce-action-btn--plus {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.8);
+}
+
+.commerce-action-btn--minus {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.8);
+}
+
+.commerce-action-btn--delete {
+  color: #fb7185;
+  border-color: rgba(251, 113, 133, 0.8);
+}
+
+.commerce-summary hr {
+  border-color: rgba(148, 163, 184, 0.22);
+  opacity: 1;
+}
+
+.commerce-form .form-check {
+  margin-bottom: 0.85rem;
+}
+
+.commerce-form .form-check-input {
+  background-color: #0f172a;
+  border-color: rgba(148, 163, 184, 0.36);
+}
+
+.commerce-form .form-check-input:checked {
+  background-color: #10b981;
+  border-color: #10b981;
+}
+
+.commerce-form .form-check-label,
+.commerce-payment .form-check-label {
+  color: #334155;
+}
+
+.commerce-payment {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.commerce-pay-button {
+  min-height: 48px;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 14px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+[data-theme="dark"] .wishlist-page__empty,
+[data-theme="dark"] .cart-page__empty {
+  background: rgba(15, 23, 42, 0.7);
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .wishlist-service-card {
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.96));
+  box-shadow: 0 18px 30px rgba(2, 6, 23, 0.16);
+}
+
+[data-theme="dark"] .wishlist-service-card .card-title {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .wishlist-service-card .card-text {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .commerce-card {
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
+  box-shadow: 0 24px 40px rgba(2, 6, 23, 0.18);
+}
+
+[data-theme="dark"] .commerce-card h4,
+[data-theme="dark"] .commerce-card strong,
+[data-theme="dark"] .commerce-card th,
+[data-theme="dark"] .commerce-card td,
+[data-theme="dark"] .commerce-card span,
+[data-theme="dark"] .commerce-card label {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .commerce-table {
+  color: #f8fafc;
+  --bs-table-hover-bg: rgba(51, 65, 85, 0.32);
+  --bs-table-hover-color: #f8fafc;
+  --bs-table-color: #f8fafc;
+}
+
+[data-theme="dark"] .commerce-table thead th {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .commerce-table tbody td {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .commerce-form .form-check-label,
+[data-theme="dark"] .commerce-payment .form-check-label {
+  color: #e2e8f0;
+}
+
+@media (max-width: 991px) {
+  .b2b-main {
+    flex-direction: column;
+  }
+  .b2b-sidebar {
+    width: 100%;
+  }
+  .b2b-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .b2b-search-wrap {
+    width: 100%;
+  }
+
+  .commerce-payment {
+    align-items: stretch;
+  }
+
+  .commerce-pay-button {
+    width: 100%;
+  }
+}
+
+/* --- STORE HERO RESTORATION --- */
+.store-hero {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 32px;
+}
+
+.store-hero .slick-slider,
+.store-hero .slick-list,
+.store-hero .slick-track {
+  height: 100%;
+}
+
+.store-hero__slide {
+  position: relative;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+}
+
+.store-hero__slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.store-hero__slide::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5); /* dark overlay */
+}
+
+.store-hero__content {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  left: 5%;
+  max-width: 600px;
+  color: #fff;
+  background: rgba(30, 41, 59, 0.7);
+  padding: 32px;
+  border-radius: 16px;
+  backdrop-filter: blur(8px);
+}
+
+.store-hero__eyebrow {
+  display: block;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #10b981;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.store-hero__title {
+  margin: 0;
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #fff;
+}
+
+.store-hero__content p {
+  margin: 16px 0 0;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.store-hero .slick-dots {
+  position: absolute;
+  bottom: 20px;
+  display: flex !important;
+  justify-content: center;
+  width: 100%;
+}
+
+.store-hero .slick-dots li button:before {
+  color: #fff;
+  opacity: 0.5;
+}
+
+.store-hero .slick-dots li.slick-active button:before {
+  color: #10b981;
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .store-hero__slide {
+    height: 300px;
+  }
+  .store-hero__content {
+    left: 4%;
+    right: 4%;
+    padding: 24px;
+    backdrop-filter: blur(4px);
+  }
+  .store-hero__title {
+    font-size: 28px;
+  }
+  .store-hero__content p {
+    font-size: 14px;
+  }
+  .b2b-grid {
+    grid-template-columns: 1fr;
+  }
+}

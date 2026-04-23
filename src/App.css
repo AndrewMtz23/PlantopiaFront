@@ -1,0 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Midnight Theme Colors */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-glass: rgba(30, 41, 59, 0.7);
+  --accent-primary: #10b981; /* Premium Emerald */
+  --accent-hover: #059669;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border-light: rgba(255, 255, 255, 0.1);
+  --shadow-glow: 0 0 20px rgba(16, 185, 129, 0.2);
+  --transition-fast: 0.2s ease;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+}
+
+body {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Fix browser default focus rings & underlines (The blue bar issue) */
+*:focus {
+  outline: none !important;
+}
+a:focus, button:focus, .btn:focus {
+  outline: none !important;
+  box-shadow: none;
+}
+a {
+  text-decoration: none;
+}
+
+.premium-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transition: var(--transition-fast);
+}
+
+.premium-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-glow);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.premium-btn {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-hover));
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.premium-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+}
+
+.premium-input {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  width: 100%;
+  transition: var(--transition-fast);
+}
+
+.premium-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+/* Base App overrides */
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}

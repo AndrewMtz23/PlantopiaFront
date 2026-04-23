@@ -1,0 +1,73 @@
+.footer {
+  background-color: #e8f5e9; /* Color verde claro para el fondo del footer */
+  padding: 40px 0;
+  color: #333;
+}
+
+.footer-content {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.footer-section {
+  flex: 1;
+  margin: 10px;
+  min-width: 200px;
+}
+
+.footer-section h3 {
+  color: #388e3c; /* Color verde para los títulos de las secciones */
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+.footer-section p,
+.footer-section a {
+  color: #333;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.footer-section a {
+  text-decoration: none;
+  color: #388e3c; /* Color verde para los enlaces */
+}
+
+.footer-section a:hover {
+  text-decoration: underline;
+}
+
+.footer-bottom {
+  background-color: #c8e6c9; /* Color verde más claro para el fondo del pie de página */
+  padding: 10px 0;
+  text-align: center;
+  color: #333;
+}
+
+.footer-section img {
+  max-width: 100px;
+  margin-top: 10px;
+}
+
+.social-links a {
+  color: #388e3c; /* Color verde para los íconos de redes sociales */
+  font-size: 1.5rem;
+  margin: 0 10px;
+}
+
+.social-links a:hover {
+  color: #1b5e20; /* Color verde más oscuro al pasar el mouse */
+}
+
+@media (max-width: 768px) {
+  .footer-content {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .footer-section {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+}

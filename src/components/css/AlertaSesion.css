@@ -1,0 +1,91 @@
+.plantopia-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  
+  .plantopia-header {
+    background-color: #00a86b;
+    padding: 1rem 0;
+    color: white;
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+    color: white;
+    text-decoration: none;
+  }
+  
+  .logo-img {
+    height: 40px;
+    margin-right: 10px;
+  }
+  
+  .logo-text {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .header-nav {
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .nav-link {
+    color: white;
+    margin-left: 1rem;
+    text-decoration: none;
+  }
+  
+  .plantopia-main {
+    flex-grow: 1;
+    padding: 2rem 0;
+  }
+  
+  .plantopia-alert {
+    background-color: #f8fff8;
+    border-left: 5px solid #00a86b;
+  }
+  
+  .animated-icon {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+  }
+  
+  .pulse-icon {
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+  
+  .btn-animated {
+    transition: all 0.3s ease;
+  }
+  
+  .btn-animated:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 168, 107, 0.3);
+  }
+  
+  .love-plants {
+    font-style: italic;
+    color: #6c757d;
+  }
+  
+  .beat-icon {
+    animation: beat 0.5s infinite alternate;
+  }
+  
+  @keyframes beat {
+    to { transform: scale(1.2); }
+  }

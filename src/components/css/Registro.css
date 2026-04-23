@@ -1,0 +1,626 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.registro-page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  overflow-x: hidden;
+  overflow-y: auto;
+  font-family: 'Outfit', sans-serif;
+  background: #0f172a;
+  z-index: 1;
+}
+
+.registro-v2-container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  overflow-x: hidden;
+  overflow-y: auto;
+  z-index: 1;
+}
+
+.registro-v2-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.registro-v2-background img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: contrast(1.1) brightness(0.7);
+}
+
+.registro-v2-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.66) 0%, rgba(0, 0, 0, 0.2) 100%);
+  z-index: 1;
+}
+
+.registro-v2-shell {
+  position: relative;
+  width: 100%;
+  max-width: 1300px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 92px 5%;
+  z-index: 10;
+}
+
+.registro-v2-sidebar {
+  flex: 1 1 420px;
+  max-width: 540px;
+  color: #ffffff;
+  animation: registroFadeIn 0.8s ease-out;
+}
+
+.registro-v2-tag {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  margin-bottom: 2.5rem;
+  background: rgba(16, 185, 129, 0.25);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.registro-v2-hero-title {
+  margin-bottom: 2rem;
+  font-size: clamp(3rem, 6vw, 4.8rem);
+  line-height: 0.95;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+}
+
+.registro-v2-hero-title span {
+  display: block;
+  color: #10b981;
+  text-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+}
+
+.registro-v2-hero-copy {
+  max-width: 44ch;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.registro-v2-progress-panel {
+  margin-bottom: 2rem;
+  padding: 1.25rem 1.4rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 22px;
+  backdrop-filter: blur(12px);
+}
+
+.registro-v2-progress-copy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.registro-v2-progress-copy span {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.registro-v2-progress-copy strong {
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.registro-v2-steps-wrap {
+  display: flex;
+  gap: 12px;
+}
+
+.registro-v2-step-dot {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  transition: all 0.3s ease;
+}
+
+.registro-v2-step-dot.active {
+  background: #10b981;
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.35);
+}
+
+.registro-v2-step-dot.completed {
+  background: #059669;
+}
+
+.registro-v2-features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.registro-v2-feat-card {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem 1.1rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  backdrop-filter: blur(12px);
+}
+
+.registro-v2-feat-card svg {
+  width: 22px;
+  height: 22px;
+  color: #10b981;
+}
+
+.registro-v2-feat-card span {
+  font-size: 0.83rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.registro-v2-card-area {
+  flex: 0 1 440px;
+  width: min(100%, 440px);
+  min-width: 320px;
+  animation: registroSlideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.registro-v2-form-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 2.8rem 2.5rem 2.4rem;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 36px;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 60px 120px rgba(0, 0, 0, 0.2);
+}
+
+.registro-v2-form-header {
+  margin-bottom: 1.75rem;
+  text-align: center;
+}
+
+.registro-v2-logo-wrap {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 1rem;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.registro-v2-logo-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.registro-v2-step-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.85rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.registro-v2-form-header h2 {
+  margin-bottom: 0.35rem;
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #059669 !important;
+}
+
+.registro-v2-form-header p {
+  margin-bottom: 0;
+  color: #475569 !important;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.registro-v2-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.registro-v2-step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.registro-v2-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-bottom: 1.1rem;
+}
+
+.registro-v2-field label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #64748b !important;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.registro-v2-input-wrap {
+  position: relative;
+}
+
+.registro-v2-input-wrap input,
+.registro-v2-input-wrap select {
+  width: 100%;
+  height: 54px;
+  padding: 0 3rem 0 1.25rem;
+  background: #f1f5f9;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  color: #0f172a;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  appearance: none;
+}
+
+.registro-v2-input-wrap input:focus,
+.registro-v2-input-wrap select:focus {
+  outline: none;
+  background: #ffffff;
+  border-color: #10b981;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+.registro-v2-input-wrap svg {
+  position: absolute;
+  top: 50%;
+  right: 1.2rem;
+  transform: translateY(-50%);
+  color: #64748b;
+  font-size: 1.05rem;
+  pointer-events: none;
+}
+
+.registro-v2-input-wrap input:-webkit-autofill,
+.registro-v2-input-wrap input:-webkit-autofill:hover,
+.registro-v2-input-wrap input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #0f172a;
+  -webkit-box-shadow: 0 0 0 1000px #f1f5f9 inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.registro-v2-disclaimer {
+  margin-top: 0.3rem;
+  color: #64748b;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.registro-v2-password-rules {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem 0.75rem;
+  margin-top: 0.2rem;
+}
+
+.registro-v2-password-rules span {
+  position: relative;
+  padding-left: 1rem;
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.registro-v2-password-rules span::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.45rem;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: #cbd5e1;
+}
+
+.registro-v2-password-rules span.is-valid {
+  color: #059669;
+  font-weight: 700;
+}
+
+.registro-v2-password-rules span.is-valid::before {
+  background: #10b981;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.14);
+}
+
+.registro-v2-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.8rem;
+}
+
+.registro-v2-btn {
+  min-height: 58px;
+  border: none;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-size: 0.98rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.registro-v2-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+  transform: none;
+}
+
+.registro-v2-btn-prev {
+  flex: 1 1 38%;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.registro-v2-btn-prev:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.registro-v2-btn-next {
+  flex: 1 1 62%;
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.25);
+}
+
+.registro-v2-btn-next:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: #059669;
+  box-shadow: 0 15px 30px rgba(16, 185, 129, 0.35);
+}
+
+.registro-v2-footer {
+  margin-top: 1.5rem;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.88rem;
+}
+
+.registro-v2-footer a {
+  color: #10b981;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+@keyframes registroFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes registroSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 1100px) {
+  .registro-v2-shell {
+    justify-content: center;
+    align-items: center;
+    padding: 100px 1.5rem 2rem;
+  }
+
+  .registro-v2-sidebar {
+    display: none;
+  }
+
+  .registro-v2-card-area {
+    width: min(100%, 520px);
+  }
+
+  .registro-page .public-header__nav-link,
+  .registro-page .public-header__secondary-link:not(.public-header__back-link) {
+    display: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .registro-v2-shell {
+    padding: 92px 1rem 1.5rem;
+  }
+
+  .registro-v2-card-area {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .registro-v2-form-card {
+    padding: 2.2rem 1.2rem 1.6rem;
+    border-radius: 28px;
+  }
+
+  .registro-v2-logo-wrap {
+    width: 64px;
+    height: 64px;
+  }
+
+  .registro-v2-form-header h2 {
+    font-size: 1.65rem;
+  }
+
+  .registro-v2-actions {
+    flex-direction: column-reverse;
+  }
+
+  .registro-v2-btn-prev,
+  .registro-v2-btn-next {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .registro-v2-features {
+    grid-template-columns: 1fr;
+  }
+
+  .registro-v2-progress-copy {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .registro-v2-password-rules {
+    grid-template-columns: 1fr;
+  }
+}
+
+[data-theme="dark"] .registro-v2-overlay {
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.35) 100%);
+}
+
+[data-theme="dark"] .registro-v2-form-card {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .registro-v2-form-header h2,
+[data-theme="dark"] .registro-v2-step-pill,
+[data-theme="dark"] .registro-v2-footer a {
+  color: #10b981 !important;
+}
+
+[data-theme="dark"] .registro-v2-form-header p,
+[data-theme="dark"] .registro-v2-footer,
+[data-theme="dark"] .registro-v2-disclaimer,
+[data-theme="dark"] .registro-v2-password-rules span {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .registro-v2-input-wrap input,
+[data-theme="dark"] .registro-v2-input-wrap select {
+  background: #0f172a;
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .registro-v2-input-wrap input:focus,
+[data-theme="dark"] .registro-v2-input-wrap select:focus {
+  border-color: #10b981;
+}
+
+[data-theme="dark"] .registro-v2-input-wrap input:-webkit-autofill,
+[data-theme="dark"] .registro-v2-input-wrap input:-webkit-autofill:hover,
+[data-theme="dark"] .registro-v2-input-wrap input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #f8fafc;
+  -webkit-box-shadow: 0 0 0 1000px #0f172a inset;
+}
+
+[data-theme="dark"] .registro-v2-btn-prev {
+  background: #334155;
+  color: #f8fafc;
+}
+
+.registro-page header.public-header,
+.registro-page header.public-header *,
+.registro-page .public-header,
+.registro-page .public-header *,
+.registro-page .public-header__shell,
+.registro-page .public-header__container {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.registro-page header.public-header {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  z-index: 9999 !important;
+  pointer-events: none;
+}
+
+.registro-page header.public-header * {
+  pointer-events: auto !important;
+}
+
+[data-theme="dark"] .registro-page .public-header,
+[data-theme="dark"] .registro-page .public-header__shell,
+[data-theme="dark"] .registro-page header.public-header {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.registro-page .public-header__back-link,
+.registro-page .public-header__secondary-link,
+.registro-page .public-header__nav-link {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding: 0.5rem 1rem !important;
+}
+
+.registro-page .public-header__back-link:hover,
+.registro-page .public-header__secondary-link:hover,
+.registro-page .public-header__nav-link:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+.registro-page .public-header__brand-wordmark {
+  color: #ffffff !important;
+}
