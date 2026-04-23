@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faShoppingCart,
   faPlus, faMinus, faTrash, faCreditCard
 } from '@fortawesome/free-solid-svg-icons';
 import { Alert, Button, Table, Form, Container, Card, Row, Col } from "react-bootstrap";

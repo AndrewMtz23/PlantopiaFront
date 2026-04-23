@@ -1,11 +1,4 @@
 import React from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faBoxOpen,
-  faDollarSign,
-  faLocationDot,
-  faTag,
-} from "@fortawesome/free-solid-svg-icons";
 import "../css/Catalogo.css";
 import ProductImage from "../shared/ProductImage";
 

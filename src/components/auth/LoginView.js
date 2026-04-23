@@ -6,11 +6,9 @@ import {
   faArrowRight,
   faEnvelope,
   faLock,
-  faRightToBracket,
   faSeedling,
   faShieldHeart,
 } from "@fortawesome/free-solid-svg-icons";
-import Footer from "../decoraciones/footer";
 import logo from "../logos.png";
 import "../css/Registro.css";
 import "../css/Login.css";

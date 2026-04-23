@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHeart,
@@ -218,9 +217,6 @@ const CatalogView = () => {
     setCurrentPage(1);
   }, [searchTerm, categoriaSeleccionada, sucursalSeleccionada, productos]);
 
-  const handleSearch = (event) => {
-    event.preventDefault();
-  };
 
   const indexOfLastProduct = currentPage * productsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
