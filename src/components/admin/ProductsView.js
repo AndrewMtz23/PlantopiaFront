@@ -36,6 +36,7 @@ function Productos() {
   const [precioVenta, setPrecioVenta] = useState("");
   const [imagen, setImagen] = useState(null);
   const [imagenUrl, setImagenUrl] = useState("");
+  const [imagenesArchivos, setImagenesArchivos] = useState([]);
   const [id, setId] = useState();
   const [editar, setEditar] = useState(false);
   const [productosLista, setProductos] = useState([]);
@@ -63,6 +64,25 @@ function Productos() {
   const cerrarDetalleProducto = () => {
     setProductoDetalle(null);
     setMostrarDetalle(false);
+  };
+
+  const uploadProductGallery = async (productId) => {
+    if (!imagenesArchivos.length) {
+      return;
+    }
+
+    const formData = new FormData();
+    imagenesArchivos.forEach((file) => formData.append("imagenes", file));
+
+    const response = await apiFetch(`/productoImagenes/${productId}`, {
+      method: "POST",
+      body: formData,
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data?.error || "No se pudieron subir las imagenes.");
+    }
   };
 
   const add = () => {
@@ -95,7 +115,8 @@ function Productos() {
         imagen,
         imagenUrl,
       })
-        .then(() => {
+        .then(async (response) => {
+          await uploadProductGallery(response.data.id);
           getProductos();
           cerrarModal();
           Swal.fire({
@@ -123,7 +144,8 @@ function Productos() {
       imagen,
       imagenUrl,
     })
-      .then(() => {
+      .then(async () => {
+        await uploadProductGallery(id);
         getProductos();
         cerrarModal();
         Swal.fire({
@@ -177,6 +199,7 @@ function Productos() {
     setPrecioVenta("");
     setImagen(null);
     setImagenUrl("");
+    setImagenesArchivos([]);
     setEditar(false);
     setId(undefined);
   };
@@ -192,6 +215,7 @@ function Productos() {
     setPrecioVenta(val.precioVenta);
     setImagen(val.imagen);
     setImagenUrl(val.imagenUrl || "");
+    setImagenesArchivos([]);
     setMostrarModal(true);
   };
 
@@ -326,6 +350,22 @@ function Productos() {
           Swal.fire("Error", error.message || "No se pudo subir la imagen.", "error");
         });
     }
+  };
+
+  const handleGalleryChange = (event) => {
+    const files = Array.from(event.target.files || []);
+    const validFiles = files.filter((file) => file.type.startsWith("image/"));
+
+    if (validFiles.length !== files.length) {
+      Swal.fire("Archivo invalido", "Solo puedes subir imagenes.", "error");
+    }
+
+    if (validFiles.length > 20) {
+      Swal.fire("Demasiadas imagenes", "Puedes seleccionar maximo 20 imagenes.", "error");
+      return;
+    }
+
+    setImagenesArchivos(validFiles);
   };
 
   const totalProductos = productosLista.length;
@@ -738,7 +778,7 @@ function Productos() {
             </label>
 
             <label className="admin-field admin-field--wide">
-              <span className="admin-field__label">Imagen</span>
+              <span className="admin-field__label">Imagen principal rapida</span>
               <input
                 type="file"
                 name="admin-product-image"
@@ -747,6 +787,25 @@ function Productos() {
                 accept=".jpg,.jpeg,.png,.webp,.gif"
               />
             </label>
+
+            <label className="admin-field admin-field--wide">
+              <span className="admin-field__label">Galeria del producto</span>
+              <input
+                type="file"
+                name="admin-product-gallery"
+                onChange={handleGalleryChange}
+                className="form-control admin-field__control"
+                accept=".jpg,.jpeg,.png,.webp,.gif"
+                multiple
+              />
+            </label>
+
+            {imagenesArchivos.length ? (
+              <div className="admin-detail-card admin-detail-card--wide">
+                <span className="admin-detail-card__label">Imagenes seleccionadas</span>
+                <strong>{imagenesArchivos.map((file) => file.name).join(", ")}</strong>
+              </div>
+            ) : null}
 
             <label className="admin-field admin-field--wide">
               <span className="admin-field__label">URL de respaldo</span>
@@ -852,15 +911,23 @@ function Productos() {
                 <strong>{productoDetalle.detalles}</strong>
               </div>
               <div className="admin-detail-card admin-detail-card--wide">
-                <span className="admin-detail-card__label">Imagen</span>
+                <span className="admin-detail-card__label">Galeria</span>
                 {productoDetalle.imagen || productoDetalle.imagenUrl ? (
-                  <ProductImage
-                    product={productoDetalle}
-                    alt="Imagen del Producto"
-                    width="96"
-                    height="96"
-                    style={{ objectFit: "cover", borderRadius: "16px" }}
-                  />
+                  <div className="admin-product-gallery-preview">
+                    {(productoDetalle.imagenes?.length
+                      ? productoDetalle.imagenes
+                      : [{ ruta: productoDetalle.imagen || productoDetalle.imagenUrl }]
+                    ).map((image, index) => (
+                      <ProductImage
+                        key={`${image.ruta}-${index}`}
+                        product={{ imagen: image.ruta }}
+                        alt="Imagen del Producto"
+                        width="96"
+                        height="96"
+                        style={{ objectFit: "cover", borderRadius: "16px" }}
+                      />
+                    ))}
+                  </div>
                 ) : (
                   <strong>Sin imagen</strong>
                 )}

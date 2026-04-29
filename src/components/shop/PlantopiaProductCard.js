@@ -12,32 +12,32 @@ const PlantopiaProductCard = ({
   const price = Number(product.precioVenta || product.precio || 0).toFixed(2);
 
   return (
-    <article className="b2b-card">
+    <article className={`b2b-card b2b-card--${variant}`}>
       <div className="b2b-card-image">
         <ProductImage product={product} alt={product.nombre} />
+        {badge ? <span className="b2b-card-editorial-badge">{badge}</span> : null}
       </div>
 
       <div className="b2b-card-body">
-        <h3 className="b2b-card-title">{product.nombre}</h3>
-        <div className="b2b-card-id">{product.categoria || "Catalogo"}</div>
-        {badge ? <div style={{ fontSize: "12px", color: "#64748b", marginTop: "-8px", marginBottom: "8px" }}>{badge}</div> : null}
+        <div className="b2b-card-heading">
+          <div>
+            <h3 className="b2b-card-title">{product.nombre}</h3>
+            <div className="b2b-card-id">{product.categoria || "Catalogo"}</div>
+          </div>
+        </div>
 
         {showMeta ? (
           <div className="b2b-card-meta">
-            <span className="b2b-badge" style={{ backgroundColor: "#e2e8f0", color: "#475569" }}>
-              Suc {product.sucursal}
-            </span>
-            <span className="b2b-badge">En stock</span>
+            {product.sucursal ? <span className="b2b-badge">Suc {product.sucursal}</span> : null}
+            <span className="b2b-badge">Stock {product.cantidad || "ok"}</span>
           </div>
         ) : null}
 
-        <div className="b2b-card-price" style={{ margin: "16px 0", fontSize: "18px", fontWeight: "700" }}>
-          ${parseFloat(price).toFixed(2)} <small style={{ fontSize: "12px", color: "#64748b", fontWeight: "400" }}>MXN</small>
+        <div className="b2b-card-price">
+          ${parseFloat(price).toFixed(2)} <small>MXN</small>
         </div>
 
-        <div className="b2b-card-actions" style={{ display: "flex", gap: "8px", marginTop: "auto" }}>
-          {children}
-        </div>
+        {children ? <div className="b2b-card-actions b2b-card-actions--home">{children}</div> : null}
       </div>
     </article>
   );

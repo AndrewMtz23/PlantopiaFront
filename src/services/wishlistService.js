@@ -24,9 +24,15 @@ const removeFromWishlist = async (wishlistItemId) => {
   return response.data;
 };
 
+const removeInventoryFromWishlist = async ({ productId, userId }) => {
+  const response = await Axios.delete(`/eliminarListaInventario/${userId}/${productId}`);
+  return response.data;
+};
+
 export {
   addToWishlist,
   getWishlist,
   getWishlistIds,
+  removeInventoryFromWishlist,
   removeFromWishlist,
 };

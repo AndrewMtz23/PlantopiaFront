@@ -9,9 +9,12 @@ import CollectionsPage from "./app/colecciones/page";
 import CareGuidePage from "./app/cuidados/page";
 import ShippingPage from "./app/envios/page";
 import GiftingPage from "./app/regalos-botanicos/page";
+import LocationsPage from "./app/ubicaciones/page";
 import LoginPage from "./app/auth/login/page";
 import RegisterPage from "./app/auth/register/page";
 import CatalogPage from "./app/catalogo/page";
+import ProductDetailPage from "./app/producto/page";
+import ProfilePage from "./app/perfil/page";
 import CartPage from "./app/carrito/page";
 import WishlistPage from "./app/lista/page";
 import CrudHubPage from "./app/cruds/page";
@@ -25,6 +28,9 @@ import ProfitabilityPage from "./app/graficas/rentabilidad/page";
 import CategoriesPage from "./app/categorias/page";
 import PaymentsPage from "./app/pagos/page";
 import LogsPage from "./app/logs/page";
+import MyPurchasesPage from "./app/mis-compras/page";
+import PurchaseConfirmationPage from "./app/compra-confirmada/page";
+import RequireAuth from "./components/shared/RequireAuth";
 
 function App() {
   return (
@@ -40,11 +46,14 @@ function App() {
           <Route path="/cuidados" element={<CareGuidePage />} />
           <Route path="/envios" element={<ShippingPage />} />
           <Route path="/regalos-botanicos" element={<GiftingPage />} />
+          <Route path="/ubicaciones" element={<LocationsPage />} />
           <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/auth/register" element={<RegisterPage />} />
           <Route path="/login" element={<Navigate to="/auth/login" replace />} />
           <Route path="/registro" element={<Navigate to="/auth/register" replace />} />
           <Route path="/catalogo" element={<CatalogPage />} />
+          <Route path="/producto/:inventarioId" element={<ProductDetailPage />} />
+          <Route path="/perfil" element={<ProfilePage />} />
           <Route path="/cruds" element={<CrudHubPage />} />
           <Route path="/usuarios" element={<UsersPage />} />
           <Route path="/productos" element={<ProductsPage />} />
@@ -53,6 +62,8 @@ function App() {
           <Route path="/inventarios" element={<InventoryPage />} />
           <Route path="/carrito" element={<CartPage />} />
           <Route path="/lista" element={<WishlistPage />} />
+          <Route path="/mis-compras" element={<RequireAuth><MyPurchasesPage /></RequireAuth>} />
+          <Route path="/compra-confirmada/:paymentId" element={<RequireAuth><PurchaseConfirmationPage /></RequireAuth>} />
           <Route path="/graficas" element={<MetricsPage />} />
           <Route path="/graficas/RentabilidadGraficas" element={<ProfitabilityPage />} />
           <Route path="/categorias" element={<CategoriesPage />} />

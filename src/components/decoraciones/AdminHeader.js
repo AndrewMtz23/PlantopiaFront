@@ -10,13 +10,13 @@ import {
   faLeaf,
   faRightFromBracket,
   faShieldHalved,
-  faUser,
   faMoon,
   faCloudSun,
 } from "@fortawesome/free-solid-svg-icons";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import Axios from "axios";
 import { clearSessionData, getSessionData } from "../../utils/session";
+import UserAvatar from "../shared/UserAvatar";
 
 const adminLinks = [
   { to: "/cruds", label: "Panel", icon: faHouse },
@@ -34,6 +34,7 @@ const AdminHeader = () => {
   const [userData, setUserData] = useState({
     nombre: sessionData?.nombre || "Admin",
     tipo: sessionData?.tipo || 1,
+    fotoPerfil: sessionData?.fotoPerfil || "",
   });
 
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -150,10 +151,12 @@ const AdminHeader = () => {
                 variant="light"
                 id="admin-profile-dropdown"
                 className="admin-header__profile border-0"
-              >
-                <span className="admin-header__profile-avatar">
-                  <FontAwesomeIcon icon={faUser} />
-                </span>
+            >
+                <UserAvatar
+                  imagePath={userData.fotoPerfil}
+                  name={userData.nombre}
+                  className="admin-header__profile-avatar"
+                />
                 <span className="admin-header__profile-copy">
                   <strong>{userData.nombre || "Admin"}</strong>
                   <small>{getRoleLabel(userData.tipo)}</small>
@@ -168,7 +171,7 @@ const AdminHeader = () => {
                   <span>{getRoleLabel(userData.tipo)}</span>
                 </div>
 
-                <Dropdown.Item as={Link} to="/usuarios" className="admin-header__menu-item">
+                <Dropdown.Item as={Link} to="/perfil" className="admin-header__menu-item">
                   <FontAwesomeIcon icon={faShieldHalved} />
                   <span>Gestionar cuenta</span>
                 </Dropdown.Item>

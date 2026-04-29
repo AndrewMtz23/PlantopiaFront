@@ -9,10 +9,13 @@ const normalizeImageValue = (value) => {
 };
 
 const getProductImageCandidates = (product = {}) => {
+  const galleryImages = Array.isArray(product.imagenes)
+    ? product.imagenes.map((image) => normalizeImageValue(image.ruta || image.path || image))
+    : [];
   const localImage = normalizeImageValue(product.imagen || product.image);
   const remoteImage = normalizeImageValue(product.imagenUrl || product.imageUrl);
 
-  return [localImage, remoteImage, FALLBACK_PRODUCT_IMAGE].filter(
+  return [...galleryImages, localImage, remoteImage, FALLBACK_PRODUCT_IMAGE].filter(
     (value, index, list) => value && list.indexOf(value) === index
   );
 };

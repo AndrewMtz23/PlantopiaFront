@@ -7,8 +7,10 @@ import {
   faCashRegister,
   faCreditCard,
   faFileInvoiceDollar,
+  faLocationDot,
   faMoneyBillWave,
   faReceipt,
+  faTruckFast,
   faWallet,
 } from "@fortawesome/free-solid-svg-icons";
 import AdminShell from "./AdminShell";
@@ -97,6 +99,66 @@ const getStatusTone = (status) => {
   return "neutral";
 };
 
+const getDeliveryStatusLabel = (status) => {
+  const labels = {
+    preparando: "Preparando",
+    enviado: "Enviado",
+    entregado: "Entregado",
+    cancelado: "Cancelado",
+  };
+
+  return labels[String(status || "").toLowerCase()] || "Preparando";
+};
+
+const getDeliveryTone = (status) => {
+  const normalized = String(status || "").toLowerCase();
+
+  if (normalized === "entregado") {
+    return "success";
+  }
+
+  if (normalized === "enviado") {
+    return "info";
+  }
+
+  if (normalized === "cancelado") {
+    return "danger";
+  }
+
+  return "warning";
+};
+
+const formatDateInput = (value) => {
+  if (!value) {
+    return "";
+  }
+
+  return String(value).slice(0, 10);
+};
+
+const parseDeliveryAddress = (payment = {}) => {
+  if (!payment.direccionEntrega) {
+    return null;
+  }
+
+  if (typeof payment.direccionEntrega === "object") {
+    return payment.direccionEntrega;
+  }
+
+  try {
+    return JSON.parse(payment.direccionEntrega);
+  } catch (error) {
+    return null;
+  }
+};
+
+const formatDeliveryAddress = (address = {}) =>
+  [
+    address.domicilio,
+    [address.ciudad, address.estadoDireccion].filter(Boolean).join(", "),
+    address.codigoPostal ? `CP ${address.codigoPostal}` : "",
+  ].filter(Boolean).join(" - ");
+
 const PaymentsView = () => {
   const [payments, setPayments] = useState([]);
   const [selectedPayment, setSelectedPayment] = useState(null);
@@ -107,6 +169,13 @@ const PaymentsView = () => {
   const [methodFilter, setMethodFilter] = useState("todos");
   const [statusFilter, setStatusFilter] = useState("todos");
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [trackingForm, setTrackingForm] = useState({
+    estadoEntrega: "preparando",
+    fechaEstimadaEntrega: "",
+    guiaEntrega: "",
+    notasEntrega: "",
+  });
+  const [isTrackingSaving, setIsTrackingSaving] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -198,12 +267,81 @@ const PaymentsView = () => {
 
       const data = await response.json();
       setSelectedPayment(data);
+      setTrackingForm({
+        estadoEntrega: data.pago?.estadoEntrega || "preparando",
+        fechaEstimadaEntrega: formatDateInput(data.pago?.fechaEstimadaEntrega),
+        guiaEntrega: data.pago?.guiaEntrega || "",
+        notasEntrega: data.pago?.notasEntrega || "",
+      });
     } catch (detailError) {
       setSelectedPayment({
         error: detailError.message || "No se pudo cargar el detalle del pago.",
       });
     } finally {
       setIsDetailLoading(false);
+    }
+  };
+
+  const refreshPaymentListItem = (paymentId, tracking) => {
+    setPayments((currentPayments) =>
+      currentPayments.map((payment) =>
+        Number(payment.id) === Number(paymentId)
+          ? {
+              ...payment,
+              estadoEntrega: tracking.estadoEntrega,
+              fechaEstimadaEntrega: tracking.fechaEstimadaEntrega,
+              guiaEntrega: tracking.guiaEntrega,
+              notasEntrega: tracking.notasEntrega,
+            }
+          : payment
+      )
+    );
+  };
+
+  const updateTrackingField = (field, value) => {
+    setTrackingForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
+
+  const saveTracking = async () => {
+    if (!selectedPayment?.pago?.id) {
+      return;
+    }
+
+    setIsTrackingSaving(true);
+
+    try {
+      const response = await apiFetch(`/actualizarSeguimientoPago/${selectedPayment.pago.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(trackingForm),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.error || "No se pudo actualizar el seguimiento.");
+      }
+
+      const data = await response.json();
+      setSelectedPayment((current) => ({
+        ...current,
+        pago: {
+          ...current.pago,
+          ...data.seguimiento,
+        },
+      }));
+      refreshPaymentListItem(selectedPayment.pago.id, data.seguimiento);
+    } catch (saveError) {
+      setSelectedPayment((current) => ({
+        ...current,
+        trackingError: saveError.message || "No se pudo actualizar el seguimiento.",
+      }));
+    } finally {
+      setIsTrackingSaving(false);
     }
   };
 
@@ -354,6 +492,7 @@ const PaymentsView = () => {
                       <th>Cliente</th>
                       <th>Metodo</th>
                       <th>Estado</th>
+                      <th>Entrega</th>
                       <th>Total</th>
                       <th>Items</th>
                       <th>Fecha</th>
@@ -376,6 +515,11 @@ const PaymentsView = () => {
                         <td>
                           <span className={`admin-tone-pill admin-tone-pill--${getStatusTone(payment.estado)}`}>
                             {payment.estado || "Sin estado"}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`admin-tone-pill admin-tone-pill--${getDeliveryTone(payment.estadoEntrega)}`}>
+                            {getDeliveryStatusLabel(payment.estadoEntrega)}
                           </span>
                         </td>
                         <td>{formatCurrency(payment.total)}</td>
@@ -417,6 +561,10 @@ const PaymentsView = () => {
                       <div className="admin-mobile-card__item">
                         <span className="admin-mobile-card__label">Total</span>
                         <strong>{formatCurrency(payment.total)}</strong>
+                      </div>
+                      <div className="admin-mobile-card__item">
+                        <span className="admin-mobile-card__label">Entrega</span>
+                        <strong>{getDeliveryStatusLabel(payment.estadoEntrega)}</strong>
                       </div>
                       <div className="admin-mobile-card__item">
                         <span className="admin-mobile-card__label">Unidades</span>
@@ -485,6 +633,10 @@ const PaymentsView = () => {
                 <strong>{selectedPayment.pago.estado || "Sin estado"}</strong>
               </div>
               <div className="admin-detail-card">
+                <span className="admin-detail-card__label">Entrega</span>
+                <strong>{getDeliveryStatusLabel(selectedPayment.pago.estadoEntrega)}</strong>
+              </div>
+              <div className="admin-detail-card">
                 <span className="admin-detail-card__label">Referencia</span>
                 <strong>{selectedPayment.pago.referencia || "Sin referencia"}</strong>
               </div>
@@ -495,6 +647,77 @@ const PaymentsView = () => {
               <div className="admin-detail-card">
                 <span className="admin-detail-card__label">Total</span>
                 <strong>{formatCurrency(selectedPayment.pago.total)}</strong>
+              </div>
+              {parseDeliveryAddress(selectedPayment.pago) && (
+                <div className="admin-detail-card admin-detail-card--wide">
+                  <span className="admin-detail-card__label">
+                    <FontAwesomeIcon icon={faLocationDot} className="me-2" />
+                    Direccion de entrega
+                  </span>
+                  <strong>{parseDeliveryAddress(selectedPayment.pago).nombre}</strong>
+                  <small>{formatDeliveryAddress(parseDeliveryAddress(selectedPayment.pago))}</small>
+                </div>
+              )}
+              <div className="admin-detail-card admin-detail-card--wide">
+                <span className="admin-detail-card__label">
+                  <FontAwesomeIcon icon={faTruckFast} className="me-2" />
+                  Seguimiento
+                </span>
+                {selectedPayment.trackingError && (
+                  <small className="text-danger">{selectedPayment.trackingError}</small>
+                )}
+                <div className="admin-tracking-form">
+                  <label className="admin-field">
+                    <span className="admin-field__label">Estado de entrega</span>
+                    <select
+                      className="form-select admin-field__control"
+                      value={trackingForm.estadoEntrega}
+                      onChange={(event) => updateTrackingField("estadoEntrega", event.target.value)}
+                    >
+                      <option value="preparando">Preparando</option>
+                      <option value="enviado">Enviado</option>
+                      <option value="entregado">Entregado</option>
+                      <option value="cancelado">Cancelado</option>
+                    </select>
+                  </label>
+                  <label className="admin-field">
+                    <span className="admin-field__label">Fecha estimada</span>
+                    <input
+                      type="date"
+                      className="form-control admin-field__control"
+                      value={trackingForm.fechaEstimadaEntrega}
+                      onChange={(event) => updateTrackingField("fechaEstimadaEntrega", event.target.value)}
+                    />
+                  </label>
+                  <label className="admin-field">
+                    <span className="admin-field__label">Guia</span>
+                    <input
+                      type="text"
+                      className="form-control admin-field__control"
+                      value={trackingForm.guiaEntrega}
+                      onChange={(event) => updateTrackingField("guiaEntrega", event.target.value)}
+                      placeholder="Folio o guia interna"
+                    />
+                  </label>
+                  <label className="admin-field admin-field--wide">
+                    <span className="admin-field__label">Notas</span>
+                    <textarea
+                      className="form-control admin-field__control"
+                      rows={3}
+                      value={trackingForm.notasEntrega}
+                      onChange={(event) => updateTrackingField("notasEntrega", event.target.value)}
+                      placeholder="Notas visibles para seguimiento interno"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className="btn btn-success admin-field--wide"
+                    onClick={saveTracking}
+                    disabled={isTrackingSaving}
+                  >
+                    {isTrackingSaving ? "Guardando..." : "Guardar seguimiento"}
+                  </button>
+                </div>
               </div>
               <div className="admin-detail-card admin-detail-card--wide">
                 <span className="admin-detail-card__label">Items</span>
