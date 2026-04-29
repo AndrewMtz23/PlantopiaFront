@@ -1,6 +1,6 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { getSessionData, isAdminSession, isAuthenticated } from "../../utils/session";
+import { getSessionData, isStaffSession, isAuthenticated } from "../../utils/session";
 
 const AdminGuard = ({ children }) => {
   const location = useLocation();
@@ -10,7 +10,7 @@ const AdminGuard = ({ children }) => {
     return <Navigate to="/auth/login" replace state={{ from: location.pathname }} />;
   }
 
-  if (!isAdminSession(sessionData)) {
+  if (!isStaffSession(sessionData)) {
     return <Navigate to="/catalogo" replace />;
   }
 

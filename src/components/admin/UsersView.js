@@ -12,22 +12,80 @@ import {
   faDownload,
   faEye,
   faFilter,
+  faImage,
   faPenToSquare,
   faPlus,
   faRotateLeft,
   faShieldHalved,
+  faSliders,
   faTrash,
   faUser,
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 import { generarPDF } from "../pdf/pdfUsuarios";
 import AdminShell from "./AdminShell";
+import UserAvatar from "../shared/UserAvatar";
 
 const getStatusLabel = (estatus) =>
   Number(estatus) === 1 ? "Activo" : "Inactivo";
 
 const getRoleLabel = (tipo) =>
-  Number(tipo) === 1 ? "Admin" : Number(tipo) === 2 ? "Cliente" : "Sin definir";
+  Number(tipo) === 1
+    ? "Admin"
+    : Number(tipo) === 2
+      ? "Cliente"
+      : Number(tipo) === 3
+        ? "Empleado"
+        : Number(tipo) === 4
+          ? "Repartidor"
+          : "Sin definir";
+
+const createAdjustedProfileImage = (sourceUrl, sourceFile, settings) =>
+  new Promise((resolve, reject) => {
+    const image = new Image();
+    const outputSize = 512;
+
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = outputSize;
+      canvas.height = outputSize;
+
+      const context = canvas.getContext("2d");
+      const baseScale = Math.max(outputSize / image.naturalWidth, outputSize / image.naturalHeight);
+      const scale = baseScale * settings.zoom;
+      const drawWidth = image.naturalWidth * scale;
+      const drawHeight = image.naturalHeight * scale;
+      const maxOffsetX = Math.max(0, (drawWidth - outputSize) / 2);
+      const maxOffsetY = Math.max(0, (drawHeight - outputSize) / 2);
+      const drawX = (outputSize - drawWidth) / 2 + (settings.offsetX / 80) * maxOffsetX;
+      const drawY = (outputSize - drawHeight) / 2 + (settings.offsetY / 80) * maxOffsetY;
+      const outputType =
+        sourceFile.type === "image/png" || sourceFile.type === "image/webp"
+          ? sourceFile.type
+          : "image/jpeg";
+      const extension = outputType === "image/png" ? "png" : outputType === "image/webp" ? "webp" : "jpg";
+
+      context.fillStyle = "#f7fffa";
+      context.fillRect(0, 0, outputSize, outputSize);
+      context.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error("No se pudo ajustar la imagen."));
+            return;
+          }
+
+          resolve(new File([blob], `profile-${Date.now()}.${extension}`, { type: outputType }));
+        },
+        outputType,
+        0.92
+      );
+    };
+
+    image.onerror = () => reject(new Error("No se pudo leer la imagen seleccionada."));
+    image.src = sourceUrl;
+  });
 
 function Usuarios() {
   const [estatus, setEstatus] = useState(1);
@@ -39,6 +97,17 @@ function Usuarios() {
   const [telefono, setTelefono] = useState("");
   const [correo, setCorreo] = useState("");
   const [domicilio, setDomicilio] = useState("");
+  const [fotoPerfilArchivo, setFotoPerfilArchivo] = useState(null);
+  const [fotoPerfilActual, setFotoPerfilActual] = useState("");
+  const [fotoPerfilPreview, setFotoPerfilPreview] = useState("");
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [cropSourceFile, setCropSourceFile] = useState(null);
+  const [cropSourceUrl, setCropSourceUrl] = useState("");
+  const [cropSettings, setCropSettings] = useState({
+    zoom: 1,
+    offsetX: 0,
+    offsetY: 0,
+  });
   const [id, setId] = useState();
   const [editar, setEditar] = useState(false);
   const [usuariosLista, setUsuarios] = useState([]);
@@ -68,6 +137,79 @@ function Usuarios() {
     setMostrarModal(true);
   };
 
+  const closeCropModal = () => {
+    if (cropSourceUrl) {
+      URL.revokeObjectURL(cropSourceUrl);
+    }
+
+    setCropModalOpen(false);
+    setCropSourceFile(null);
+    setCropSourceUrl("");
+    setCropSettings({ zoom: 1, offsetX: 0, offsetY: 0 });
+  };
+
+  const handlePhotoSelected = (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      Swal.fire("Imagen invalida", "Selecciona un archivo de imagen.", "error");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      Swal.fire("Imagen muy pesada", "La foto no puede superar 5MB.", "error");
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    setCropSourceFile(file);
+    setCropSourceUrl(previewUrl);
+    setCropSettings({ zoom: 1, offsetX: 0, offsetY: 0 });
+    setCropModalOpen(true);
+  };
+
+  const applyPhotoCrop = async () => {
+    if (!cropSourceFile || !cropSourceUrl) {
+      return;
+    }
+
+    try {
+      const adjustedFile = await createAdjustedProfileImage(
+        cropSourceUrl,
+        cropSourceFile,
+        cropSettings
+      );
+      setFotoPerfilArchivo(adjustedFile);
+      closeCropModal();
+    } catch (error) {
+      Swal.fire("No se pudo ajustar", error.message, "error");
+    }
+  };
+
+  const buildUserFormData = () => {
+    const formData = new FormData();
+    formData.append("estatus", estatus);
+    formData.append("tipo", tipo);
+    formData.append("clave", clave);
+    formData.append("nombre", nombre);
+    formData.append("fechaNacimiento", fechaNacimiento);
+    formData.append("genero", genero);
+    formData.append("telefono", telefono);
+    formData.append("correo", correo);
+    formData.append("domicilio", domicilio);
+
+    if (fotoPerfilArchivo) {
+      formData.append("fotoPerfil", fotoPerfilArchivo);
+    }
+
+    return formData;
+  };
+
   const add = () => {
     if (
       tipo.trim() === "" ||
@@ -85,17 +227,7 @@ function Usuarios() {
         icon: "error",
       });
     } else {
-      Axios.post("/crearUsuario", {
-        estatus,
-        tipo,
-        clave,
-        nombre,
-        fechaNacimiento,
-        genero,
-        telefono,
-        correo,
-        domicilio,
-      }).then(() => {
+      Axios.post("/crearUsuario", buildUserFormData()).then(() => {
         getUsuarios();
         cerrarModal();
         Swal.fire({
@@ -108,18 +240,10 @@ function Usuarios() {
   };
 
   const update = () => {
-    Axios.put("/editarUsuario", {
-      id,
-      estatus,
-      tipo,
-      clave,
-      nombre,
-      fechaNacimiento,
-      genero,
-      telefono,
-      correo,
-      domicilio,
-    }).then(() => {
+    const formData = buildUserFormData();
+    formData.append("id", id);
+
+    Axios.put("/editarUsuario", formData).then(() => {
       getUsuarios();
       cerrarModal();
       Swal.fire({
@@ -170,6 +294,9 @@ function Usuarios() {
     setTelefono("");
     setCorreo("");
     setDomicilio("");
+    setFotoPerfilArchivo(null);
+    setFotoPerfilActual("");
+    closeCropModal();
     setEditar(false);
     setId(undefined);
   };
@@ -186,6 +313,8 @@ function Usuarios() {
     setTelefono(val.telefono);
     setCorreo(val.correo);
     setDomicilio(val.domicilio);
+    setFotoPerfilArchivo(null);
+    setFotoPerfilActual(val.fotoPerfil || "");
     setMostrarModal(true);
   };
 
@@ -272,6 +401,18 @@ function Usuarios() {
   useEffect(() => {
     getUsuarios();
   }, [getUsuarios]);
+
+  useEffect(() => {
+    if (!fotoPerfilArchivo) {
+      setFotoPerfilPreview("");
+      return undefined;
+    }
+
+    const previewUrl = URL.createObjectURL(fotoPerfilArchivo);
+    setFotoPerfilPreview(previewUrl);
+
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [fotoPerfilArchivo]);
 
   const handleGenerarPDF = () => {
     Axios.get("/verUsuario")
@@ -468,6 +609,7 @@ function Usuarios() {
               <thead>
                 <tr>
                   <th scope="col">#</th>
+                  <th scope="col">Foto</th>
                   <th scope="col">Estatus</th>
                   <th scope="col">Tipo</th>
                   <th scope="col">Nombre</th>
@@ -479,6 +621,9 @@ function Usuarios() {
                 {usuariosLista.map((val) => (
                   <tr key={val.id}>
                     <th>{val.id}</th>
+                    <td>
+                      <UserAvatar imagePath={val.fotoPerfil} name={val.nombre} size={44} />
+                    </td>
                     <td>
                       <span
                         className={`admin-status-pill admin-status-pill--${
@@ -532,6 +677,7 @@ function Usuarios() {
             {usuariosLista.map((val) => (
               <article key={val.id} className="admin-mobile-card">
                 <div className="admin-mobile-card__header">
+                  <UserAvatar imagePath={val.fotoPerfil} name={val.nombre} size={48} />
                   <div>
                     <span className="admin-mobile-card__eyebrow">Usuario #{val.id}</span>
                     <h3 className="admin-mobile-card__title">{val.nombre}</h3>
@@ -632,7 +778,53 @@ function Usuarios() {
                 <option value="">Selecciona un tipo</option>
                 <option value="1">Administrador</option>
                 <option value="2">Cliente</option>
+                <option value="3">Empleado</option>
+                <option value="4">Repartidor</option>
               </select>
+            </label>
+
+            <label className="admin-field admin-field--wide">
+              <span className="admin-field__label">Foto de perfil</span>
+              <div className="admin-user-photo-field">
+                <div className="admin-user-photo-field__preview">
+                  <UserAvatar
+                    imagePath={fotoPerfilPreview || fotoPerfilActual}
+                    name={nombre || "Usuario"}
+                    size={74}
+                  />
+                </div>
+                <div className="admin-user-photo-field__body">
+                  <strong>{fotoPerfilArchivo?.name || "Foto de usuario"}</strong>
+                  <span>JPG, PNG, GIF o WEBP. Maximo 5MB.</span>
+                  <div className="admin-user-photo-field__actions">
+                    <label htmlFor="admin-user-photo-input" className="btn btn-success">
+                      <FontAwesomeIcon icon={faImage} className="me-2" />
+                      Elegir imagen
+                    </label>
+                    {(fotoPerfilArchivo || fotoPerfilActual) && (
+                      <button
+                        type="button"
+                        className="btn admin-page-header__ghost"
+                        onClick={() => {
+                          setFotoPerfilArchivo(null);
+                          setFotoPerfilActual("");
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faRotateLeft} className="me-2" />
+                        Quitar
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    id="admin-user-photo-input"
+                    type="file"
+                    name="admin-user-photo"
+                    accept=".jpg,.jpeg,.png,.gif,.webp,image/jpeg,image/png,image/gif,image/webp"
+                    onChange={handlePhotoSelected}
+                    className="admin-user-photo-field__input"
+                  />
+                </div>
+              </div>
             </label>
 
             <label className="admin-field admin-field--wide">
@@ -775,6 +967,17 @@ function Usuarios() {
         <Modal.Body className="admin-modal__body">
           {usuarioDetalle && (
             <div className="admin-detail-grid">
+              <div className="admin-detail-card admin-detail-card--wide admin-detail-card--profile">
+                <UserAvatar
+                  imagePath={usuarioDetalle.fotoPerfil}
+                  name={usuarioDetalle.nombre}
+                  size={76}
+                />
+                <div>
+                  <span className="admin-detail-card__label">Foto de perfil</span>
+                  <strong>{usuarioDetalle.fotoPerfil ? "Configurada" : "Sin foto"}</strong>
+                </div>
+              </div>
               <div className="admin-detail-card">
                 <span className="admin-detail-card__label">ID</span>
                 <strong>{usuarioDetalle.id}</strong>
@@ -818,6 +1021,103 @@ function Usuarios() {
           <button className="btn admin-page-header__ghost" onClick={cerrarDetalleUsuario}>
             <FontAwesomeIcon icon={faRotateLeft} className="me-2" />
             Cerrar
+          </button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal
+        show={cropModalOpen}
+        onHide={closeCropModal}
+        centered
+        size="lg"
+        dialogClassName="admin-modal admin-modal--crop"
+      >
+        <Modal.Header closeButton className="admin-modal__header">
+          <div>
+            <span className="admin-editor-card__eyebrow">Ajuste de imagen</span>
+            <Modal.Title className="admin-modal__title">Recortar foto de perfil</Modal.Title>
+          </div>
+        </Modal.Header>
+        <Modal.Body className="admin-modal__body">
+          <div className="admin-image-cropper">
+            <div className="admin-image-cropper__stage">
+              {cropSourceUrl && (
+                <img
+                  src={cropSourceUrl}
+                  alt="Vista previa de recorte"
+                  style={{
+                    transform: `translate(${cropSettings.offsetX}px, ${cropSettings.offsetY}px) scale(${cropSettings.zoom})`,
+                  }}
+                />
+              )}
+              <span className="admin-image-cropper__mask" />
+            </div>
+
+            <div className="admin-image-cropper__controls">
+              <label className="admin-field">
+                <span className="admin-field__label">
+                  <FontAwesomeIcon icon={faSliders} className="me-2" />
+                  Zoom
+                </span>
+                <input
+                  type="range"
+                  min="1"
+                  max="2.4"
+                  step="0.05"
+                  value={cropSettings.zoom}
+                  onChange={(event) =>
+                    setCropSettings((current) => ({
+                      ...current,
+                      zoom: Number(event.target.value),
+                    }))
+                  }
+                />
+              </label>
+
+              <label className="admin-field">
+                <span className="admin-field__label">Mover horizontal</span>
+                <input
+                  type="range"
+                  min="-80"
+                  max="80"
+                  step="1"
+                  value={cropSettings.offsetX}
+                  onChange={(event) =>
+                    setCropSettings((current) => ({
+                      ...current,
+                      offsetX: Number(event.target.value),
+                    }))
+                  }
+                />
+              </label>
+
+              <label className="admin-field">
+                <span className="admin-field__label">Mover vertical</span>
+                <input
+                  type="range"
+                  min="-80"
+                  max="80"
+                  step="1"
+                  value={cropSettings.offsetY}
+                  onChange={(event) =>
+                    setCropSettings((current) => ({
+                      ...current,
+                      offsetY: Number(event.target.value),
+                    }))
+                  }
+                />
+              </label>
+            </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="admin-modal__footer">
+          <button className="btn btn-success" onClick={applyPhotoCrop}>
+            <FontAwesomeIcon icon={faImage} className="me-2" />
+            Aplicar imagen
+          </button>
+          <button className="btn admin-page-header__ghost" onClick={closeCropModal}>
+            <FontAwesomeIcon icon={faRotateLeft} className="me-2" />
+            Cancelar
           </button>
         </Modal.Footer>
       </Modal>

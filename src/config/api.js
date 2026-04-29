@@ -1,7 +1,11 @@
 import axios from "axios";
 import { clearSessionData, getAccessToken } from "../utils/session";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.REACT_APP_API_URL;
+
+if (!API_BASE_URL) {
+  throw new Error("REACT_APP_API_URL no esta configurado.");
+}
 
 const buildApiUrl = (path) => `${API_BASE_URL}${path}`;
 
@@ -41,6 +45,12 @@ const configureHttpClient = () => {
   axios.interceptors.response.use(
     (response) => response,
     (error) => {
+      if (error?.response?.status) {
+        const method = (error.config?.method || "GET").toUpperCase();
+        const url = `${error.config?.baseURL || ""}${error.config?.url || ""}`;
+        console.error(`API error ${error.response.status}: ${method} ${url}`);
+      }
+
       if (error?.response?.status === 401) {
         clearSessionData();
       }

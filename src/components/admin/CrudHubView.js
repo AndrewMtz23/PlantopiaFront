@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, Button, Row, Col } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -12,8 +12,14 @@ import {
   faTags,
   faReceipt,
   faListCheck,
+  faMoneyBillWave,
+  faTriangleExclamation,
+  faSeedling,
+  faClockRotateLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import AdminShell from "./AdminShell";
+import { apiFetch } from "../../config/api";
+import { getSessionData } from "../../utils/session";
 
 const menuItems = [
   {
@@ -79,6 +85,13 @@ const menuItems = [
     text: "Consulta metricas de rentabilidad y comportamiento para tomar decisiones.",
     link: "/graficas",
   },
+  {
+    title: "Logistica",
+    icon: faTruckMoving,
+    accent: "emerald",
+    text: "Gestiona el surtido, preparacion y entrega de pedidos en tiempo real.",
+    link: "/logistica",
+  },
 ];
 
 const MenuItem = ({ title, icon, accent, text, link }) => (
@@ -98,7 +111,135 @@ const MenuItem = ({ title, icon, accent, text, link }) => (
   </Col>
 );
 
+const currencyFormatter = new Intl.NumberFormat("es-MX", {
+  style: "currency",
+  currency: "MXN",
+  maximumFractionDigits: 0,
+});
+
+const formatCurrency = (value) => currencyFormatter.format(Number(value || 0));
+
+const formatDate = (value) => {
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime())
+    ? "Sin fecha"
+    : parsed.toLocaleDateString("es-MX", { day: "2-digit", month: "short" });
+};
+
 const AdminDashboard = () => {
+  const sessionData = getSessionData();
+  const userType = Number(sessionData?.tipo);
+  const isAdmin = userType === 1;
+
+  const [dashboard, setDashboard] = useState({
+    threshold: 5,
+    resumen: {},
+    inventarioCritico: [],
+    pagosRecientes: [],
+    logsRecientes: [],
+    productosTop: [],
+  });
+
+  // Filtrar menuItems según rol
+  const filteredMenuItems = menuItems.filter(item => {
+    if (isAdmin) return true; // Admin ve todo
+    
+    if (userType === 3) {
+      // Empleado ve Productos, Inventarios, Categorias y Sucursales
+      return ["Productos", "Inventarios", "Logistica"].includes(item.title);
+    }
+    
+    if (userType === 4) {
+      // Repartidor tiene opciones específicas
+      return ["Logistica"].includes(item.title);
+    }
+    
+    return false;
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!isAdmin) {
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    apiFetch("/dashboardResumen")
+      .then((response) => response.json())
+      .then((data) => {
+        if (isMounted && data?.resumen) {
+          setDashboard(data);
+        }
+      })
+      .catch((error) => {
+        console.error("Error al cargar dashboard:", error);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAdmin]);
+
+  const { resumen } = dashboard;
+  const kpis = [
+    {
+      label: "Ventas totales",
+      value: formatCurrency(resumen.ventasTotales),
+      meta: `${resumen.pagosProcesados || 0} pagos procesados`,
+      icon: faMoneyBillWave,
+    },
+    {
+      label: "Ventas hoy",
+      value: formatCurrency(resumen.ventasHoy),
+      meta: `${resumen.pagosHoy || 0} pago(s) hoy`,
+      icon: faReceipt,
+    },
+    {
+      label: "Productos activos",
+      value: resumen.productosActivos || 0,
+      meta: `${resumen.inventariosCriticos || 0} con inventario critico`,
+      icon: faSeedling,
+    },
+    {
+      label: "Sucursales activas",
+      value: resumen.sucursalesActivas || 0,
+      meta: `${resumen.usuariosActivos || 0} usuarios activos`,
+      icon: faBuilding,
+    },
+  ];
+
+  if (!isAdmin) {
+    const roleTitle = userType === 4 ? "Panel de entregas" : "Panel operativo";
+    const roleText = userType === 4
+      ? "Revisa pedidos pendientes, consulta rutas y gestiona tus entregas desde logistica."
+      : "Accede a los modulos operativos asignados para mantener la tienda en marcha.";
+
+    return (
+      <AdminShell contentClassName="flex-grow-1 py-5">
+        <section className="admin-hero">
+          <div>
+            <span className="admin-hero__eyebrow">Workspace</span>
+            <h1 className="admin-hero__title">{roleTitle}</h1>
+            <p className="admin-hero__text">{roleText}</p>
+          </div>
+          <div className="admin-hero__panel">
+            <span className="admin-hero__metric-label">Modulos activos</span>
+            <strong className="admin-hero__metric-value">{filteredMenuItems.length}</strong>
+            <span className="admin-hero__metric-copy">Accesos disponibles para tu rol.</span>
+          </div>
+        </section>
+
+        <Row className="g-4">
+          {filteredMenuItems.map((item, index) => (
+            <MenuItem key={index} {...item} />
+          ))}
+        </Row>
+      </AdminShell>
+    );
+  }
+
   return (
     <AdminShell contentClassName="flex-grow-1 py-5">
       <section className="admin-hero">
@@ -116,8 +257,101 @@ const AdminDashboard = () => {
           <span className="admin-hero__metric-copy">Todo el panel administrativo vive aqui.</span>
         </div>
       </section>
+      <section className="admin-critical-strip">
+        <div>
+          <span className="admin-critical-strip__eyebrow">
+            <FontAwesomeIcon icon={faTriangleExclamation} />
+            Inventario critico
+          </span>
+          <strong>{dashboard.inventarioCritico.length}</strong>
+          <p>productos con {dashboard.threshold} o menos unidades disponibles.</p>
+        </div>
+        <div className="admin-critical-strip__list">
+          {dashboard.inventarioCritico.length ? (
+            dashboard.inventarioCritico.slice(0, 4).map((item) => (
+              <Link key={item.id} to="/inventarios" className="admin-critical-item">
+                <span>{item.producto_nombre || `Producto ${item.producto}`}</span>
+                <strong>{item.cantidad} u.</strong>
+                <small>{item.sucursal_nombre || `Sucursal ${item.sucursal}`}</small>
+              </Link>
+            ))
+          ) : (
+            <span className="admin-critical-strip__empty">Todo el inventario se ve estable.</span>
+          )}
+        </div>
+      </section>
+
+      <section className="admin-kpi-grid">
+        {kpis.map((kpi) => (
+          <article className="admin-kpi-card" key={kpi.label}>
+            <span className="admin-kpi-card__icon">
+              <FontAwesomeIcon icon={kpi.icon} />
+            </span>
+            <span className="admin-kpi-card__label">{kpi.label}</span>
+            <strong>{kpi.value}</strong>
+            <small>{kpi.meta}</small>
+          </article>
+        ))}
+      </section>
+
+      <section className="admin-dashboard-insights">
+        <article className="admin-insight-card">
+          <div className="admin-insight-card__header">
+            <span><FontAwesomeIcon icon={faReceipt} /> Pagos recientes</span>
+            <Link to="/pagos">Ver pagos</Link>
+          </div>
+          <div className="admin-insight-list">
+            {dashboard.pagosRecientes.length ? dashboard.pagosRecientes.map((payment) => (
+              <div className="admin-insight-row" key={payment.id}>
+                <div>
+                  <strong>Pago #{payment.id}</strong>
+                  <span>{payment.usuario_nombre || "Cliente Plantopia"} · {formatDate(payment.fechaRegistro)}</span>
+                </div>
+                <b>{formatCurrency(payment.total)}</b>
+              </div>
+            )) : <p className="admin-insight-empty">Sin pagos registrados.</p>}
+          </div>
+        </article>
+
+        <article className="admin-insight-card">
+          <div className="admin-insight-card__header">
+            <span><FontAwesomeIcon icon={faSeedling} /> Productos top</span>
+            <Link to="/graficas">Ver graficas</Link>
+          </div>
+          <div className="admin-insight-list">
+            {dashboard.productosTop.length ? dashboard.productosTop.map((product, index) => (
+              <div className="admin-insight-row" key={`${product.nombre}-${index}`}>
+                <div>
+                  <strong>{product.nombre || "Producto sin nombre"}</strong>
+                  <span>{product.cantidad || 0} unidades vendidas</span>
+                </div>
+                <b>{formatCurrency(product.total)}</b>
+              </div>
+            )) : <p className="admin-insight-empty">Aun no hay ventas suficientes.</p>}
+          </div>
+        </article>
+
+        <article className="admin-insight-card admin-insight-card--wide">
+          <div className="admin-insight-card__header">
+            <span><FontAwesomeIcon icon={faClockRotateLeft} /> Actividad reciente</span>
+            <Link to="/logs">Ver logs</Link>
+          </div>
+          <div className="admin-timeline-list">
+            {dashboard.logsRecientes.length ? dashboard.logsRecientes.map((log) => (
+              <div className={`admin-timeline-item admin-timeline-item--${log.nivel || "info"}`} key={log.id}>
+                <span />
+                <div>
+                  <strong>{log.descripcion}</strong>
+                  <small>{log.modulo} · {log.accion} · {formatDate(log.fechaRegistro)}</small>
+                </div>
+              </div>
+            )) : <p className="admin-insight-empty">Sin actividad reciente.</p>}
+          </div>
+        </article>
+      </section>
+
       <Row className="g-4">
-        {menuItems.map((item, index) => (
+        {filteredMenuItems.map((item, index) => (
           <MenuItem key={index} {...item} />
         ))}
       </Row>

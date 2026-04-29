@@ -250,6 +250,37 @@
   pointer-events: none;
 }
 
+.login-v2-password-toggle {
+  position: absolute;
+  right: 0.65rem;
+  top: 50%;
+  width: 40px;
+  height: 40px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.login-v2-password-toggle:hover,
+.login-v2-password-toggle:focus-visible {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  outline: none;
+}
+
+.login-v2-password-toggle svg {
+  position: static;
+  transform: none;
+  pointer-events: none;
+}
+
 .login-v2-forgot {
   align-self: flex-end;
   font-size: 0.78rem;
@@ -459,4 +490,3 @@
 .login-page .public-header__brand-wordmark {
   color: #ffffff !important;
 }
-

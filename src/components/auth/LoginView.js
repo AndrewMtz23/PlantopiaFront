@@ -5,7 +5,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowRight,
   faEnvelope,
-  faLock,
+  faEye,
+  faEyeSlash,
   faSeedling,
   faShieldHeart,
 } from "@fortawesome/free-solid-svg-icons";
@@ -13,7 +14,7 @@ import logo from "../logos.png";
 import "../css/Registro.css";
 import "../css/Login.css";
 import { apiFetch } from "../../config/api";
-import { getSessionData, isAdminSession, isAuthenticated, saveSessionData } from "../../utils/session";
+import { getSessionData, isAuthenticated, saveSessionData } from "../../utils/session";
 import PublicHeader from "../shared/PublicHeader";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -22,6 +23,7 @@ function LoginView() {
   const [clave, setClave] = useState("");
   const [correo, setCorreo] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,7 +31,10 @@ function LoginView() {
 
   useEffect(() => {
     if (isAuthenticated(sessionData)) {
-      navigate(isAdminSession(sessionData) ? "/cruds" : "/catalogo", { replace: true });
+      const { tipo } = sessionData;
+      if (tipo === 1) navigate("/cruds", { replace: true });
+      else if (tipo === 3 || tipo === 4) navigate("/logistica", { replace: true });
+      else navigate("/catalogo", { replace: true });
     }
   }, [navigate, sessionData]);
 
@@ -82,7 +87,12 @@ function LoginView() {
         token: data.token,
       });
 
-      const fallbackRoute = data.session?.tipo === 1 ? "/cruds" : "/catalogo";
+      const { tipo } = data.session;
+      let fallbackRoute = "/catalogo";
+      
+      if (tipo === 1) fallbackRoute = "/cruds";
+      else if (tipo === 3 || tipo === 4) fallbackRoute = "/logistica";
+
       const redirectTarget = location.state?.from || fallbackRoute;
       navigate(redirectTarget, { replace: true });
     } catch (loginError) {
@@ -162,13 +172,21 @@ function LoginView() {
                   <label htmlFor="clave">CONTRASEÑA</label>
                   <div className="login-v2-input-wrap">
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       id="clave"
                       placeholder="**********"
                       value={clave}
                       onChange={(e) => setClave(e.target.value)}
                     />
-                    <FontAwesomeIcon icon={faLock} />
+                    <button
+                      type="button"
+                      className="login-v2-password-toggle"
+                      onClick={() => setShowPassword((current) => !current)}
+                      aria-label={showPassword ? "Ocultar contrasena" : "Mostrar contrasena"}
+                      aria-pressed={showPassword}
+                    >
+                      <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                    </button>
                   </div>
                   <Link to="#" className="login-v2-forgot">¿Olvidaste tu contraseña?</Link>
                 </div>

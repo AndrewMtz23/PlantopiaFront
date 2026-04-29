@@ -1,117 +1,93 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faBoxes,
-  faTruck,
-  faComments,
-  faMinus,
+  faArrowLeft,
   faHeart,
+  faLeaf,
+  faSearch,
+  faShoppingCart,
 } from "@fortawesome/free-solid-svg-icons";
-import { Row, Button, Col, Container, Alert, Card } from "react-bootstrap";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
+import { Alert, Container, Spinner } from "react-bootstrap";
 import "../css/Catalogo.css";
-import Swal from "sweetalert2";
 import Footer from "../decoraciones/footer";
 import { getSessionData } from "../../utils/session";
-import { getWishlist, removeFromWishlist } from "../../services/wishlistService";
+import { getWishlist } from "../../services/wishlistService";
 import RequireAuth from "../shared/RequireAuth";
 import PublicHeader from "../shared/PublicHeader";
-import StoreHero from "./StoreHero";
-import ProductDisplayCard from "./ProductDisplayCard";
-
-const WishlistProductCard = ({ producto, onEliminar }) => {
-  return (
-    <ProductDisplayCard producto={producto}>
-      <Button
-        variant="danger"
-        onClick={() => onEliminar(producto.id)}
-        className="w-100"
-      >
-        <FontAwesomeIcon icon={faMinus} className="mr-2" />
-        Eliminar de la Lista
-      </Button>
-    </ProductDisplayCard>
-  );
-};
-
-const serviceCards = [
-  {
-    icon: faTruck,
-    title: "Envios a Domicilio",
-    text: "Entregamos tus plantas favoritas directamente a tu puerta en todo Mexico.",
-  },
-  {
-    icon: faBoxes,
-    title: "Ventas al por Mayor",
-    text: "Ofrecemos descuentos especiales para compras en grandes cantidades.",
-  },
-  {
-    icon: faComments,
-    title: "Asesoramiento Experto",
-    text: "Nuestro equipo de expertos te ayudara a elegir y cuidar tus plantas.",
-  },
-];
+import CatalogProductCard from "./CatalogProductCard";
 
 const WishlistView = () => {
-  const [lista, setLista] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [listaCompleta, setListaCompleta] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const sessionData = getSessionData();
 
-  const images = [
-    "hojas-pequenas.webp",
-    "hojas.webp",
-    "plantas-endemicas.webp",
-    "flores-pixels.webp",
-  ];
-
   useEffect(() => {
+    let cancelled = false;
+
     if (!sessionData?.idUsuario) {
-      return;
+      setIsLoading(false);
+      return undefined;
     }
 
+    setIsLoading(true);
     getWishlist(sessionData.idUsuario)
-      .then((wishlist) => {
-        const uniqueProducts = Array.from(new Set(wishlist.map((product) => product.inventario_id)))
-          .map((id) => wishlist.find((product) => product.inventario_id === id));
-        setLista(uniqueProducts);
-        setListaCompleta(uniqueProducts);
+      .then((items) => {
+        if (!cancelled) {
+          setWishlist(Array.isArray(items) ? items : []);
+          setError("");
+        }
       })
-      .catch((error) => {
-        console.error("Error al obtener la lista de deseos:", error);
+      .catch((fetchError) => {
+        if (!cancelled) {
+          console.error("Error al obtener favoritos:", fetchError);
+          setError("No se pudieron cargar tus favoritos.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, [sessionData?.idUsuario]);
 
-  const handleEliminarClick = (id) => {
-    removeFromWishlist(id)
-      .then(() => {
-        setLista((prevLista) => prevLista.filter((producto) => producto.id !== id));
-        setListaCompleta((prevLista) => prevLista.filter((producto) => producto.id !== id));
-        Swal.fire({
-          icon: "success",
-          title: "Eliminado!",
-          text: "El producto ha sido eliminado de tu lista de deseos.",
-        });
-      })
-      .catch((error) => {
-        console.error("Error al eliminar de la lista de deseos:", error);
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "No se pudo eliminar el producto. Por favor, intenta de nuevo.",
-        });
-      });
-  };
+  const filteredWishlist = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+
+    if (!query) {
+      return wishlist;
+    }
+
+    return wishlist.filter((product) =>
+      [product.nombre, product.detalles, product.categoria]
+        .some((value) => String(value || "").toLowerCase().includes(query))
+    );
+  }, [wishlist, searchTerm]);
+
+  const stats = useMemo(() => {
+    const totalValue = filteredWishlist.reduce(
+      (sum, product) => sum + Number(product.precioVenta || 0),
+      0
+    );
+    const availableProducts = filteredWishlist.filter(
+      (product) => Number(product.cantidad || 0) > 0
+    ).length;
+
+    return {
+      total: filteredWishlist.length,
+      availableProducts,
+      totalValue,
+    };
+  }, [filteredWishlist]);
 
   const handleSearch = (event) => {
     event.preventDefault();
-    const filteredList = listaCompleta.filter((producto) =>
-      producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      producto.detalles.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      producto.categoria.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setLista(filteredList);
   };
 
   return (
@@ -121,52 +97,95 @@ const WishlistView = () => {
           searchTerm={searchTerm}
           onSearchTermChange={setSearchTerm}
           onSearchSubmit={handleSearch}
+          searchPlaceholder="Buscar en favoritos..."
         />
 
         <main className="wishlist-page__main">
-          <StoreHero
-            images={images}
-            title="Lista de Deseos"
-            description="Explora los productos que has guardado para comprar mas tarde"
-            icon={faHeart}
-          />
+          <section className="wishlist-hero">
+            <Container className="wishlist-page__shell wishlist-hero__grid">
+              <div>
+                <span className="wishlist-hero__eyebrow">
+                  <FontAwesomeIcon icon={faHeart} />
+                  Favoritos Plantopia
+                </span>
+                <h1>Tu lista para comprar despues</h1>
+                <p>
+                  Guarda piezas, compara opciones y manda al carrito cuando ya tengas claro
+                  que va mejor con tu espacio.
+                </p>
+                <div className="wishlist-hero__actions">
+                  <Link to="/catalogo" className="b2b-btn wishlist-hero__button">
+                    <FontAwesomeIcon icon={faArrowLeft} />
+                    Volver al catalogo
+                  </Link>
+                </div>
+              </div>
 
-          <Container className="wishlist-page__shell">
-            {lista.length === 0 ? (
-              <Alert variant="info" className="wishlist-page__empty">
-                No hay productos en la lista de deseos.
-              </Alert>
-            ) : (
-              <Row className="g-4">
-                {lista.map((producto) => (
-                  <Col md={6} lg={4} key={producto.inventario_id}>
-                    <WishlistProductCard producto={producto} onEliminar={handleEliminarClick} />
-                  </Col>
-                ))}
-              </Row>
-            )}
-          </Container>
-
-          <section className="wishlist-services">
-            <Container className="wishlist-page__shell">
-              <h2 className="wishlist-services__title">
-                <FontAwesomeIcon icon={faBoxes} /> Nuestros Servicios
-              </h2>
-              <Row className="g-4">
-              {serviceCards.map((service) => (
-                <Col md={4} key={service.title}>
-                  <Card className="wishlist-service-card h-100">
-                    <Card.Body className="text-center">
-                      <FontAwesomeIcon icon={service.icon} className="wishlist-service-card__icon mb-3" size="3x" />
-                      <Card.Title>{service.title}</Card.Title>
-                      <Card.Text>{service.text}</Card.Text>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
-              </Row>
+              <aside className="wishlist-summary">
+                <div>
+                  <span>Favoritos</span>
+                  <strong>{stats.total}</strong>
+                </div>
+                <div>
+                  <span>Disponibles</span>
+                  <strong>{stats.availableProducts}</strong>
+                </div>
+                <div>
+                  <span>Valor visible</span>
+                  <strong>
+                    {new Intl.NumberFormat("es-MX", {
+                      style: "currency",
+                      currency: "MXN",
+                    }).format(stats.totalValue)}
+                  </strong>
+                </div>
+              </aside>
             </Container>
           </section>
+
+          <Container className="wishlist-page__shell">
+            <div className="wishlist-toolbar">
+              <label className="wishlist-search">
+                <FontAwesomeIcon icon={faSearch} />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Buscar por nombre, categoria o detalle"
+                />
+              </label>
+              <Link to="/carrito" className="wishlist-cart-link">
+                <FontAwesomeIcon icon={faShoppingCart} />
+                Ver carrito
+              </Link>
+            </div>
+
+            {isLoading ? (
+              <div className="wishlist-page__empty wishlist-page__empty--center">
+                <Spinner animation="border" />
+                <span>Cargando favoritos...</span>
+              </div>
+            ) : error ? (
+              <Alert variant="danger" className="wishlist-page__empty">
+                {error}
+              </Alert>
+            ) : filteredWishlist.length === 0 ? (
+              <div className="wishlist-page__empty wishlist-page__empty--center">
+                <FontAwesomeIcon icon={faLeaf} />
+                <strong>No hay favoritos para mostrar</strong>
+                <p>Explora el catalogo y toca el corazon de los productos que quieras guardar.</p>
+                <Link to="/catalogo" className="b2b-btn wishlist-hero__button">
+                  Ir al catalogo
+                </Link>
+              </div>
+            ) : (
+              <div className="b2b-products-grid wishlist-products-grid">
+                {filteredWishlist.map((product) => (
+                  <CatalogProductCard producto={product} key={product.inventario_id || product.id} />
+                ))}
+              </div>
+            )}
+          </Container>
         </main>
 
         <Footer />

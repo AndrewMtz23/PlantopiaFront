@@ -63,9 +63,15 @@ const addProductToCart = async ({ product, quantity, userId }) => {
   return { action: "created" };
 };
 
-const processPurchase = async (userId) => {
+const processPurchase = async (
+  userId,
+  { method = "efectivo", reference = null, deliveryAddress = null } = {}
+) => {
   const response = await Axios.post("/procesarCompra", {
     usuario: userId,
+    metodo: method,
+    referencia: reference,
+    direccionEntrega: deliveryAddress,
   });
 
   return response.data;

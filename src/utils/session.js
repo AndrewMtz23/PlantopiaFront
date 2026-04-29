@@ -65,12 +65,24 @@ const isAuthenticated = (sessionData) =>
 const isAdminSession = (sessionData) =>
   isAuthenticated(sessionData) && Number(sessionData?.tipo) === 1;
 
+const isEmployeeSession = (sessionData) =>
+  isAuthenticated(sessionData) && Number(sessionData?.tipo) === 3;
+
+const isCourierSession = (sessionData) =>
+  isAuthenticated(sessionData) && Number(sessionData?.tipo) === 4;
+
+const isStaffSession = (sessionData) =>
+  isAuthenticated(sessionData) && [1, 3, 4].includes(Number(sessionData?.tipo));
+
 export {
   clearSessionData,
   decodeJwtPayload,
   getAccessToken,
   getSessionData,
   isAdminSession,
+  isEmployeeSession,
+  isCourierSession,
+  isStaffSession,
   isAuthenticated,
   isTokenExpired,
   saveSessionData,

@@ -8,7 +8,9 @@ import {
   faChevronDown,
   faComments,
   faEnvelope,
+  faFileInvoiceDollar,
   faHeart,
+  faMapLocationDot,
   faRightToBracket,
   faSearch,
   faShieldHalved,
@@ -21,17 +23,22 @@ import {
   faCloudSun,
 } from "@fortawesome/free-solid-svg-icons";
 import logo from "../logos.png";
+import Axios from "axios";
 import {
   clearSessionData,
   getSessionData,
   isAdminSession,
   isAuthenticated,
+  saveSessionData,
+  isStaffSession,
 } from "../../utils/session";
+import UserAvatar from "./UserAvatar";
 import "../css/PublicHeader.css";
 
 const publicLinks = [
-  { to: "/Acerca de", label: "Acerca de", icon: faComments },
-  { to: "/Cia", label: "Cia", icon: faEnvelope },
+  { to: "/acerca de", label: "Acerca de", icon: faComments },
+  { to: "/cia", label: "Cia", icon: faEnvelope },
+  { to: "/ubicaciones", label: "Ubicaciones", icon: faMapLocationDot },
 ];
 
 const PublicHeader = ({
@@ -45,7 +52,7 @@ const PublicHeader = ({
   searchPlaceholder = "Buscar plantas...",
 }) => {
   const navigate = useNavigate();
-  const sessionData = getSessionData();
+  const [sessionData, setSessionData] = React.useState(() => getSessionData());
   const isLoggedIn = isAuthenticated(sessionData);
   const isAdmin = isAdminSession(sessionData);
   const userLabel = sessionData?.nombre || "Mi cuenta";
@@ -62,6 +69,46 @@ const PublicHeader = ({
       setIsDarkMode(true);
       document.documentElement.setAttribute("data-theme", "dark");
     }
+  }, []);
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    const refreshSession = async () => {
+      const currentSession = getSessionData();
+
+      if (!currentSession?.token) {
+        if (isMounted) {
+          setSessionData(null);
+        }
+        return;
+      }
+
+      try {
+        const response = await Axios.get("/auth/me");
+        const refreshedSession = {
+          ...currentSession,
+          ...response.data.session,
+          token: currentSession.token,
+        };
+
+        saveSessionData(refreshedSession);
+
+        if (isMounted) {
+          setSessionData(refreshedSession);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setSessionData(getSessionData());
+        }
+      }
+    };
+
+    refreshSession();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const toggleTheme = () => {
@@ -83,8 +130,14 @@ const PublicHeader = ({
     navigate("/auth/login");
   };
 
+  const headerStateClass = authMode
+    ? "public-header--auth"
+    : isLoggedIn
+    ? "public-header--session"
+    : "public-header--guest";
+
   return (
-    <header className="public-header">
+    <header className={`public-header ${headerStateClass}`}>
       <div className="public-header__shell public-header__container">
         <div className="public-header__mobile-top">
           <Link to="/" className="public-header__brand">
@@ -153,9 +206,8 @@ const PublicHeader = ({
 
           <div className="public-header__account-zone">
             <button 
-              className="public-header__secondary-link" 
+              className="public-header__secondary-link public-header__theme-button"
               onClick={toggleTheme}
-              style={{ border: "none", cursor: "pointer", background: "transparent", minWidth: "48px", padding: "0" }}
               aria-label="Toggle dark mode"
               title="Alternar Modo Oscuro"
             >
@@ -175,12 +227,19 @@ const PublicHeader = ({
                     id="public-profile-dropdown"
                     className="public-header__profile"
                   >
-                    <span className="public-header__profile-avatar">
-                      <FontAwesomeIcon icon={faUser} />
-                    </span>
+                    <UserAvatar
+                      imagePath={sessionData?.fotoPerfil}
+                      name={userLabel}
+                      className="public-header__profile-avatar"
+                      size={42}
+                    />
                     <span className="public-header__profile-copy">
                       <strong>{userLabel}</strong>
-                      <small>{isAdmin ? "Administrador" : "Sesion activa"}</small>
+                      <small>
+                        {Number(sessionData?.tipo) === 1 ? "Administrador" : 
+                         Number(sessionData?.tipo) === 3 ? "Empleado" :
+                         Number(sessionData?.tipo) === 4 ? "Repartidor" : "Sesion activa"}
+                      </small>
                     </span>
                     <FontAwesomeIcon icon={faChevronDown} className="public-header__profile-caret" />
                   </Dropdown.Toggle>
@@ -196,32 +255,53 @@ const PublicHeader = ({
 
                     <Dropdown.Item
                       as={Link}
-                      to={isAdmin ? "/cruds" : "/catalogo"}
+                      to={isStaffSession(sessionData) ? (Number(sessionData.tipo) === 2 ? "/catalogo" : "/cruds") : "/catalogo"}
                       className="public-header__menu-item"
                     >
-                      <FontAwesomeIcon icon={isAdmin ? faShieldHalved : faShop} />
-                      <span>{isAdmin ? "Panel Administrativo" : "Ir al catalogo"}</span>
+                      <FontAwesomeIcon icon={isStaffSession(sessionData) ? faShieldHalved : faShop} />
+                      <span>{isStaffSession(sessionData) ? "Panel de Gestión" : "Ir al catalogo"}</span>
                     </Dropdown.Item>
 
-                    {!isAdmin && (
-                      <Dropdown.Item
-                        as={Link}
-                        to="/carrito"
-                        className="public-header__menu-item"
-                      >
-                        <FontAwesomeIcon icon={faShoppingCart} />
-                        <span>Mi carrito</span>
-                      </Dropdown.Item>
+                    {!isStaffSession(sessionData) && (
+                      <>
+                        <Dropdown.Item
+                          as={Link}
+                          to="/carrito"
+                          className="public-header__menu-item"
+                        >
+                          <FontAwesomeIcon icon={faShoppingCart} />
+                          <span>Mi carrito</span>
+                        </Dropdown.Item>
+                        <Dropdown.Item
+                          as={Link}
+                          to="/mis-compras"
+                          className="public-header__menu-item"
+                        >
+                          <FontAwesomeIcon icon={faFileInvoiceDollar} />
+                          <span>Mis compras</span>
+                        </Dropdown.Item>
+                      </>
                     )}
 
                     <Dropdown.Item
                       as={Link}
-                      to={isAdmin ? "/usuarios" : "/lista"}
+                      to="/perfil"
                       className="public-header__menu-item"
                     >
-                      <FontAwesomeIcon icon={isAdmin ? faUser : faHeart} />
-                      <span>{isAdmin ? "Gestionar cuenta" : "Mis favoritos"}</span>
+                      <FontAwesomeIcon icon={faUser} />
+                      <span>Gestionar cuenta</span>
                     </Dropdown.Item>
+
+                    {!isStaffSession(sessionData) && (
+                      <Dropdown.Item
+                        as={Link}
+                        to="/lista"
+                        className="public-header__menu-item"
+                      >
+                        <FontAwesomeIcon icon={faHeart} />
+                        <span>Mis favoritos</span>
+                      </Dropdown.Item>
+                    )}
 
                     <Dropdown.Divider />
 

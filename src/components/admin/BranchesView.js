@@ -22,6 +22,7 @@ import {
   faUserTie,
 } from "@fortawesome/free-solid-svg-icons";
 import AdminShell from "./AdminShell";
+import BranchMap from "./BranchMap";
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
@@ -35,6 +36,8 @@ function Sucursales() {
   const [nombre, setNombre] = useState("");
   const [telefono, setTelefono] = useState("");
   const [direccion, setDireccion] = useState("");
+  const [latitud, setLatitud] = useState("");
+  const [longitud, setLongitud] = useState("");
   const [id, setId] = useState();
   const [editar, setEditar] = useState(false);
   const [sucursalesLista, setSucursales] = useState([]);
@@ -90,6 +93,8 @@ function Sucursales() {
         nombre,
         telefono,
         direccion,
+        latitud,
+        longitud,
       })
         .then(() => {
           getSucursales();
@@ -115,6 +120,8 @@ function Sucursales() {
       nombre,
       telefono,
       direccion,
+      latitud,
+      longitud,
     })
       .then(() => {
         getSucursales();
@@ -167,6 +174,8 @@ function Sucursales() {
     setNombre("");
     setTelefono("");
     setDireccion("");
+    setLatitud("");
+    setLongitud("");
     setEditar(false);
     setId(undefined);
   };
@@ -179,7 +188,14 @@ function Sucursales() {
     setNombre(val.nombre);
     setTelefono(val.telefono);
     setDireccion(val.direccion);
+    setLatitud(val.latitud ?? "");
+    setLongitud(val.longitud ?? "");
     setMostrarModal(true);
+  };
+
+  const seleccionarUbicacion = ({ latitud: nextLatitude, longitud: nextLongitude }) => {
+    setLatitud(nextLatitude);
+    setLongitud(nextLongitude);
   };
 
   const getSucursales = useCallback(() => {
@@ -309,6 +325,7 @@ function Sucursales() {
   const totalSucursales = sucursalesLista.length;
   const activas = sucursalesLista.filter((item) => Number(item.estatus) === 1).length;
   const inactivas = totalSucursales - activas;
+  const ubicadas = sucursalesLista.filter((item) => item.latitud && item.longitud).length;
   const activePercentage = totalSucursales
     ? Math.round((activas / totalSucursales) * 100)
     : 0;
@@ -373,6 +390,20 @@ function Sucursales() {
           <strong className="admin-stat-card__value">{activePercentage}%</strong>
           <span className="admin-stat-card__meta">Sucursales activas del total</span>
         </article>
+      </section>
+
+      <section className="admin-map-panel">
+        <div className="admin-map-panel__header">
+          <div>
+            <span className="admin-table-card__eyebrow">Mapa operativo</span>
+            <h2 className="admin-table-card__title">
+              <FontAwesomeIcon icon={faMapLocationDot} className="me-2" />
+              Sucursales geolocalizadas
+            </h2>
+          </div>
+          <span className="admin-table-card__count">{ubicadas} ubicadas</span>
+        </div>
+        <BranchMap branches={sucursalesLista} />
       </section>
 
       <section className="admin-panel-grid admin-panel-grid--users">
@@ -670,6 +701,35 @@ function Sucursales() {
                 autoComplete="street-address"
               />
             </label>
+
+            <div className="admin-field admin-field--wide">
+              <span className="admin-field__label">Ubicacion en mapa</span>
+              <BranchMap
+                branches={[]}
+                selectedPosition={{ latitud, longitud }}
+                onPickLocation={seleccionarUbicacion}
+                interactivePicker
+                className="branch-map--picker"
+              />
+              <div className="admin-coordinate-grid">
+                <input
+                  type="number"
+                  value={latitud}
+                  onChange={(event) => setLatitud(event.target.value)}
+                  className="form-control admin-field__control"
+                  placeholder="Latitud"
+                  step="0.000001"
+                />
+                <input
+                  type="number"
+                  value={longitud}
+                  onChange={(event) => setLongitud(event.target.value)}
+                  className="form-control admin-field__control"
+                  placeholder="Longitud"
+                  step="0.000001"
+                />
+              </div>
+            </div>
           </div>
         </Modal.Body>
         <Modal.Footer className="admin-modal__footer">
@@ -740,6 +800,20 @@ function Sucursales() {
                 <span className="admin-detail-card__label">Direccion</span>
                 <strong>{sucursalDetalle.direccion}</strong>
               </div>
+              <div className="admin-detail-card">
+                <span className="admin-detail-card__label">Latitud</span>
+                <strong>{sucursalDetalle.latitud || "Sin ubicar"}</strong>
+              </div>
+              <div className="admin-detail-card">
+                <span className="admin-detail-card__label">Longitud</span>
+                <strong>{sucursalDetalle.longitud || "Sin ubicar"}</strong>
+              </div>
+              {sucursalDetalle.latitud && sucursalDetalle.longitud && (
+                <div className="admin-detail-card admin-detail-card--wide">
+                  <span className="admin-detail-card__label">Mapa</span>
+                  <BranchMap branches={[sucursalDetalle]} className="branch-map--detail" />
+                </div>
+              )}
             </div>
           )}
         </Modal.Body>

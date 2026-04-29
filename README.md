@@ -1,44 +1,50 @@
-# Plantopia Web Client 🌿 ✨
+# Plantopia Frontend
 
-Bienvenido al frontend de **Plantopia**, una plataforma e-commerce premium diseñada para los amantes de las plantas. Aquí los usuarios pueden explorar un catálogo botánico, gestionar su carrito y administrar su perfil.
+Frontend de Plantopia para la version **PostgreSQL + Prisma** del backend. Esta rama (`PlantopiaWithPostgreSQL`) apunta al backend migrado y conserva la version original en `main`.
 
-> [!NOTE]
-> **Proyecto Académico**: Este repositorio es parte de un proyecto escolar integral que incluye una aplicación móvil y un servidor backend.
+## Stack
 
-## 🎨 Características Visuales
+- React
+- React Router
+- Axios
+- React Bootstrap
+- FontAwesome
+- Leaflet / React Leaflet
+- PayPal button integration
 
-- **Diseño Premium**: Interfaz moderna con estética "Emerald Green" y modo oscuro.
-- **Glassmorphism**: Efectos de transparencia y desenfoque modernos.
-- **Responsivo**: Adaptado para dispositivos móviles, tablets y escritorio.
-- **Micro-animaciones**: Transiciones suaves para una mejor experiencia de usuario.
+## Variables De Entorno
 
-## 🛠️ Stack Tecnológico
+Crea un archivo `.env` en la raiz del frontend usando `.env.example` como base:
 
-- **React.js**: Biblioteca principal para la interfaz.
-- **React Router**: Gestión de navegación SPA.
-- **Axios**: Comunicación con la API del Backend.
-- **FontAwesome**: Iconografía profesional.
-- **React Hot Toast**: Notificaciones interactivas.
+```env
+REACT_APP_API_URL=http://localhost:3001
+REACT_APP_PAYPAL_CLIENT_ID=replace-with-paypal-client-id
+REACT_APP_GOOGLE_MAPS_API_KEY=replace-with-google-maps-browser-key
+```
 
-## 🚀 Configuración Local
+Notas:
 
-1. Clona el repositorio.
-2. Instala las dependencias:
-   ```bash
-   npm install
-   ```
-3. Crea un archivo `.env` en la raíz con la URL de tu API:
-   ```env
-   REACT_APP_API_URL=http://localhost:3001
-   ```
-4. Inicia la aplicación:
-   ```bash
-   npm start
-   ```
+- `REACT_APP_API_URL` es obligatoria. En local normalmente apunta a `http://localhost:3001`.
+- `REACT_APP_PAYPAL_CLIENT_ID` habilita el boton de PayPal en checkout.
+- `REACT_APP_GOOGLE_MAPS_API_KEY` solo se usa en componentes legacy con Google Maps. Los mapas nuevos usan Leaflet/OpenStreetMap.
+- Las variables de React se leen al iniciar el dev server; reinicia `npm start` despues de cambiarlas.
 
-## 🔗 Repositorios Relacionados
+## Instalacion Local
 
-- [Plantopia Backend API](https://github.com/tu-usuario/PlantopiaBack)
+```bash
+npm install
+npm start
+```
 
----
-Desarrollado con ❤️ para el Proyecto Plantopia - 2026
+## Backend Esperado
+
+Esta rama espera el backend de Plantopia en su rama:
+
+```text
+PlantopiaWithPostgreSQL
+```
+
+## Rama
+
+- `main`: version original.
+- `PlantopiaWithPostgreSQL`: version conectada al backend PostgreSQL + Prisma.

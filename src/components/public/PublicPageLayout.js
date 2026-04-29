@@ -21,9 +21,12 @@ const resolveSearchDestination = (term, sessionData) => {
     query.includes("envio") ||
     query.includes("entrega") ||
     query.includes("sucursal") ||
+    query.includes("ubicacion") ||
+    query.includes("ubicación") ||
+    query.includes("mapa") ||
     query.includes("oficina")
   ) {
-    return "/envios";
+    return "/ubicaciones";
   }
 
   if (query.includes("regalo") || query.includes("detalle")) {

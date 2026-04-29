@@ -109,16 +109,24 @@ const MetricsView = () => {
   useEffect(() => {
     let isMounted = true;
 
-    Promise.all([apiFetch("/metricasGenerales"), apiFetch("/ventasPorSucursal")])
-      .then(async ([metricasResponse, ventasResponse]) => {
-        if (!metricasResponse.ok || !ventasResponse.ok) {
-          throw new Error("No fue posible cargar el tablero de analitica.");
+    Promise.allSettled([apiFetch("/metricasGenerales"), apiFetch("/ventasPorSucursal")])
+      .then(async ([metricasResult, ventasResult]) => {
+        if (metricasResult.status !== "fulfilled" || !metricasResult.value.ok) {
+          const status = metricasResult.status === "fulfilled" ? metricasResult.value.status : "sin respuesta";
+          throw new Error(`No fue posible cargar metricasGenerales (${status}).`);
         }
 
-        const [metricasData, ventasData] = await Promise.all([
-          metricasResponse.json(),
-          ventasResponse.json(),
-        ]);
+        const metricasData = await metricasResult.value.json();
+        let ventasData = Array.isArray(metricasData?.ventasPorSucursal)
+          ? metricasData.ventasPorSucursal
+          : [];
+
+        if (ventasResult.status === "fulfilled" && ventasResult.value.ok) {
+          ventasData = await ventasResult.value.json();
+        } else {
+          const status = ventasResult.status === "fulfilled" ? ventasResult.value.status : "sin respuesta";
+          console.warn(`No fue posible cargar ventasPorSucursal (${status}); usando respaldo de metricasGenerales.`);
+        }
 
         if (!isMounted) {
           return;

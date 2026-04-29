@@ -10,7 +10,6 @@ import { Modal } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBoxesStacked,
-  faBuilding,
   faChartPie,
   faDownload,
   faEye,
@@ -19,14 +18,41 @@ import {
   faPenToSquare,
   faPlus,
   faRotateLeft,
+  faTriangleExclamation,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import AdminShell from "./AdminShell";
 
 pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
+const LOW_STOCK_THRESHOLD = 5;
+
 const getStatusLabel = (estatus) =>
   Number(estatus) === 1 ? "Activo" : "Inactivo";
+
+const getStockState = (cantidad) => {
+  const stock = Number(cantidad || 0);
+
+  if (stock <= 0) {
+    return { label: "Sin stock", tone: "danger" };
+  }
+
+  if (stock <= LOW_STOCK_THRESHOLD) {
+    return { label: "Stock bajo", tone: "warning" };
+  }
+
+  return { label: "Disponible", tone: "success" };
+};
+
+const StockBadge = ({ cantidad }) => {
+  const stockState = getStockState(cantidad);
+
+  return (
+    <span className={`admin-stock-pill admin-stock-pill--${stockState.tone}`}>
+      {stockState.label}
+    </span>
+  );
+};
 
 function Inventarios() {
   const [estatus, setEstatus] = useState(1);
@@ -245,6 +271,10 @@ function Inventarios() {
               .includes(busqueda.toLowerCase());
           case "cantidad":
             return inventario.cantidad.toString().includes(busqueda);
+          case "stock": {
+            const stockLabel = getStockState(inventario.cantidad).label.toLowerCase();
+            return stockLabel.includes(busqueda.toLowerCase());
+          }
           default:
             return false;
         }
@@ -360,6 +390,9 @@ function Inventarios() {
     (acc, item) => acc + Number(item.cantidad || 0),
     0
   );
+  const stockBajo = inventariosLista.filter(
+    (item) => Number(item.estatus) === 1 && Number(item.cantidad || 0) > 0 && Number(item.cantidad || 0) <= LOW_STOCK_THRESHOLD
+  ).length;
 
   return (
     <AdminShell>
@@ -408,13 +441,11 @@ function Inventarios() {
         </article>
         <article className="admin-stat-card">
           <span className="admin-stat-card__icon">
-            <FontAwesomeIcon icon={faBuilding} />
+            <FontAwesomeIcon icon={faTriangleExclamation} />
           </span>
-          <span className="admin-stat-card__label">Sucursales activas</span>
-          <strong className="admin-stat-card__value">
-            {new Set(inventariosLista.map((item) => item.sucursal)).size}
-          </strong>
-          <span className="admin-stat-card__meta">Sedes con inventario listado</span>
+          <span className="admin-stat-card__label">Stock bajo</span>
+          <strong className="admin-stat-card__value">{stockBajo}</strong>
+          <span className="admin-stat-card__meta">Registros con {LOW_STOCK_THRESHOLD} o menos unidades</span>
         </article>
         <article className="admin-stat-card">
           <span className="admin-stat-card__icon">
@@ -453,6 +484,7 @@ function Inventarios() {
                 <option value="proveedor">Proveedor</option>
                 <option value="producto">Producto</option>
                 <option value="cantidad">Cantidad</option>
+                <option value="stock">Stock</option>
               </select>
             </label>
 
@@ -518,6 +550,7 @@ function Inventarios() {
                   <th scope="col">Proveedor</th>
                   <th scope="col">Producto</th>
                   <th scope="col">Cantidad</th>
+                  <th scope="col">Stock</th>
                   <th scope="col">Acciones</th>
                 </tr>
               </thead>
@@ -538,6 +571,7 @@ function Inventarios() {
                     <td>{getProveedorNombre(val.proveedor)}</td>
                     <td>{getProductoNombre(val.producto)}</td>
                     <td>{val.cantidad}</td>
+                    <td><StockBadge cantidad={val.cantidad} /></td>
                     <td>
                       <div className="admin-table__actions">
                         <button
@@ -606,6 +640,10 @@ function Inventarios() {
                   <div className="admin-mobile-card__item">
                     <span className="admin-mobile-card__label">Cantidad</span>
                     <strong>{val.cantidad}</strong>
+                  </div>
+                  <div className="admin-mobile-card__item">
+                    <span className="admin-mobile-card__label">Stock</span>
+                    <strong><StockBadge cantidad={val.cantidad} /></strong>
                   </div>
                 </div>
 
@@ -804,6 +842,10 @@ function Inventarios() {
               <div className="admin-detail-card">
                 <span className="admin-detail-card__label">Cantidad</span>
                 <strong>{inventarioDetalle.cantidad}</strong>
+              </div>
+              <div className="admin-detail-card">
+                <span className="admin-detail-card__label">Nivel de stock</span>
+                <strong><StockBadge cantidad={inventarioDetalle.cantidad} /></strong>
               </div>
             </div>
           )}

@@ -3,6 +3,8 @@ import { LoadScript, GoogleMap, Marker } from "@react-google-maps/api";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMapMarkerAlt } from '@fortawesome/free-solid-svg-icons';
 
+const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
+
 const Ubicacion = () => {
   const mapContainerStyle = {
     width: '100%',
@@ -23,7 +25,10 @@ const Ubicacion = () => {
   return (
     <section className="location-section container">
       <h2><FontAwesomeIcon icon={faMapMarkerAlt} /> Nuestras Ubicaciones</h2>
-      <LoadScript googleMapsApiKey="AIzaSyA5LvY3kYfQ-L2dPGvf6AnUphjewMzjPQk">
+      {!GOOGLE_MAPS_API_KEY ? (
+        <p>Configura REACT_APP_GOOGLE_MAPS_API_KEY para mostrar el mapa.</p>
+      ) : (
+      <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY}>
         <GoogleMap
           mapContainerStyle={mapContainerStyle}
           center={center}
@@ -56,6 +61,7 @@ const Ubicacion = () => {
           })}
         </GoogleMap>
       </LoadScript>
+      )}
     </section>
   );
 };

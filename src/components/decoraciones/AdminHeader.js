@@ -10,30 +10,58 @@ import {
   faLeaf,
   faRightFromBracket,
   faShieldHalved,
-  faUser,
   faMoon,
   faCloudSun,
+  faTruck,
+  faClipboardList,
 } from "@fortawesome/free-solid-svg-icons";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import Axios from "axios";
 import { clearSessionData, getSessionData } from "../../utils/session";
+import UserAvatar from "../shared/UserAvatar";
 
-const adminLinks = [
-  { to: "/cruds", label: "Panel", icon: faHouse },
-  { to: "/graficas", label: "Graficas", icon: faChartColumn },
-  { to: "/usuarios", label: "Usuarios", icon: faBoxesStacked },
-];
 
-const getRoleLabel = (tipo) => (Number(tipo) === 1 ? "Administrador" : "Operador");
+
+const getRoleLabel = (tipo) => {
+  const t = Number(tipo);
+  if (t === 1) return "Administrador";
+  if (t === 3) return "Empleado";
+  if (t === 4) return "Repartidor";
+  return "Operador";
+};
 
 const AdminHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const sessionData = getSessionData();
 
+  // Generar links dinámicos según el rol
+  const getNavLinks = (tipo) => {
+    const t = Number(tipo);
+    const links = [{ to: "/cruds", label: "Panel", icon: faHouse }];
+    
+    if (t === 1) {
+      links.push({ to: "/graficas", label: "Graficas", icon: faChartColumn });
+      links.push({ to: "/usuarios", label: "Usuarios", icon: faBoxesStacked });
+    }
+    
+    if (t === 3) {
+      links.push({ to: "/productos", label: "Catalogo", icon: faLeaf });
+      links.push({ to: "/inventarios", label: "Stock", icon: faBoxesStacked });
+      links.push({ to: "/logistica", label: "Pedidos", icon: faClipboardList });
+    }
+
+    if (t === 4) {
+      links.push({ to: "/logistica", label: "Entregas", icon: faTruck });
+    }
+
+    return links;
+  };
+
   const [userData, setUserData] = useState({
     nombre: sessionData?.nombre || "Admin",
     tipo: sessionData?.tipo || 1,
+    fotoPerfil: sessionData?.fotoPerfil || "",
   });
 
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -111,7 +139,7 @@ const AdminHeader = () => {
 
         <Navbar.Collapse id="admin-navbar-nav">
           <Nav className="admin-header__nav mx-auto">
-            {adminLinks.map((link) => {
+            {getNavLinks(userData.tipo).map((link) => {
               const isActive =
                 location.pathname === link.to ||
                 (link.to !== "/cruds" && location.pathname.startsWith(link.to));
@@ -141,19 +169,23 @@ const AdminHeader = () => {
               <FontAwesomeIcon icon={isDarkMode ? faCloudSun : faMoon} size="lg" />
             </button>
 
-            <Link to="/graficas" className="admin-header__notification text-decoration-none">
-              <FontAwesomeIcon icon={faChartColumn} />
-            </Link>
+            {Number(userData.tipo) === 1 && (
+              <Link to="/graficas" className="admin-header__notification text-decoration-none">
+                <FontAwesomeIcon icon={faChartColumn} />
+              </Link>
+            )}
 
             <Dropdown align="end">
               <Dropdown.Toggle
                 variant="light"
                 id="admin-profile-dropdown"
                 className="admin-header__profile border-0"
-              >
-                <span className="admin-header__profile-avatar">
-                  <FontAwesomeIcon icon={faUser} />
-                </span>
+            >
+                <UserAvatar
+                  imagePath={userData.fotoPerfil}
+                  name={userData.nombre}
+                  className="admin-header__profile-avatar"
+                />
                 <span className="admin-header__profile-copy">
                   <strong>{userData.nombre || "Admin"}</strong>
                   <small>{getRoleLabel(userData.tipo)}</small>
@@ -168,7 +200,7 @@ const AdminHeader = () => {
                   <span>{getRoleLabel(userData.tipo)}</span>
                 </div>
 
-                <Dropdown.Item as={Link} to="/usuarios" className="admin-header__menu-item">
+                <Dropdown.Item as={Link} to="/perfil" className="admin-header__menu-item">
                   <FontAwesomeIcon icon={faShieldHalved} />
                   <span>Gestionar cuenta</span>
                 </Dropdown.Item>
