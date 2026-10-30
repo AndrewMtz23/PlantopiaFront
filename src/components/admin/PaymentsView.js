@@ -15,6 +15,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import AdminShell from "./AdminShell";
 import { apiFetch } from "../../config/api";
+import { getDeliveryOptions } from '../../utils/deliveryOptions';
 
 const currencyFormatter = new Intl.NumberFormat("es-MX", {
   style: "currency",
@@ -102,6 +103,7 @@ const getStatusTone = (status) => {
 const getDeliveryStatusLabel = (status) => {
   const labels = {
     preparando: "Preparando",
+    listo: "Listo para reparto",
     enviado: "Enviado",
     entregado: "Entregado",
     cancelado: "Cancelado",
@@ -288,6 +290,7 @@ const PaymentsView = () => {
         Number(payment.id) === Number(paymentId)
           ? {
               ...payment,
+              estado: tracking.estado,
               estadoEntrega: tracking.estadoEntrega,
               fechaEstimadaEntrega: tracking.fechaEstimadaEntrega,
               guiaEntrega: tracking.guiaEntrega,
@@ -343,6 +346,20 @@ const PaymentsView = () => {
     } finally {
       setIsTrackingSaving(false);
     }
+  };
+
+  const confirmCash = async () => {
+    if (!selectedPayment?.pago?.id || isTrackingSaving || !window.confirm('Confirma que ya recibiste el efectivo de este pedido.')) return;
+    setIsTrackingSaving(true);
+    try {
+      const response = await apiFetch(`/pagos/${selectedPayment.pago.id}/confirmar-efectivo`, { method: 'POST' });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'No se pudo confirmar el cobro.');
+      setPayments(current => current.map(payment => payment.id === data.id ? { ...payment, ...data } : payment));
+      await openDetail(data.id);
+    } catch (error) {
+      setSelectedPayment(current => ({ ...current, trackingError: error.message }));
+    } finally { setIsTrackingSaving(false); }
   };
 
   return (
@@ -631,6 +648,9 @@ const PaymentsView = () => {
               <div className="admin-detail-card">
                 <span className="admin-detail-card__label">Estado</span>
                 <strong>{selectedPayment.pago.estado || "Sin estado"}</strong>
+                {selectedPayment.pago.estado === 'pendiente' && selectedPayment.pago.metodo === 'efectivo' && (
+                  <button type="button" disabled={isTrackingSaving} onClick={confirmCash}>Confirmar efectivo recibido</button>
+                )}
               </div>
               <div className="admin-detail-card">
                 <span className="admin-detail-card__label">Entrega</span>
@@ -674,10 +694,7 @@ const PaymentsView = () => {
                       value={trackingForm.estadoEntrega}
                       onChange={(event) => updateTrackingField("estadoEntrega", event.target.value)}
                     >
-                      <option value="preparando">Preparando</option>
-                      <option value="enviado">Enviado</option>
-                      <option value="entregado">Entregado</option>
-                      <option value="cancelado">Cancelado</option>
+                      {getDeliveryOptions(selectedPayment.pago).map(status => <option key={status} value={status}>{getDeliveryStatusLabel(status)}</option>)}
                     </select>
                   </label>
                   <label className="admin-field">
