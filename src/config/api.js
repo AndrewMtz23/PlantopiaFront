@@ -27,6 +27,12 @@ const apiFetch = (path, options = {}) =>
     ...options,
     headers: buildAuthHeaders(options.headers || {}),
   }).then((response) => {
+    const readJson = response.json.bind(response);
+    response.json = async () => {
+      const data = await readJson();
+      if (data?.error?.message) return { ...data, errorCode: data.error.code, error: data.error.message };
+      return data;
+    };
     if (response.status === 401) {
       clearSessionData();
     }
@@ -45,6 +51,10 @@ const configureHttpClient = () => {
   axios.interceptors.response.use(
     (response) => response,
     (error) => {
+      if (error.response?.data?.error?.message) {
+        const details = error.response.data.error;
+        error.response.data = { ...error.response.data, errorCode: details.code, error: details.message };
+      }
       if (error?.response?.status) {
         const method = (error.config?.method || "GET").toUpperCase();
         const url = `${error.config?.baseURL || ""}${error.config?.url || ""}`;
