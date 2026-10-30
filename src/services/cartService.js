@@ -5,22 +5,19 @@ const getCart = async (userId) => {
   return response.data;
 };
 
-const createCartItem = async ({ inventoryId, userId, quantity, subtotal }) => {
+const createCartItem = async ({ inventoryId, quantity }) => {
   const response = await Axios.post("/crearCarrito", {
     inventario: inventoryId,
-    usuario: userId,
     cantidad: quantity,
-    subtotal,
   });
 
   return response.data;
 };
 
-const updateCartItem = async ({ id, quantity, subtotal }) => {
+const updateCartItem = async ({ id, quantity }) => {
   const response = await Axios.put("/editarCarrito", {
     id,
     cantidad: quantity,
-    subtotal,
   });
 
   return response.data;
@@ -63,21 +60,31 @@ const addProductToCart = async ({ product, quantity, userId }) => {
   return { action: "created" };
 };
 
-const processPurchase = async (
-  userId,
-  { method = "efectivo", reference = null, deliveryAddress = null } = {}
-) => {
-  const response = await Axios.post("/procesarCompra", {
-    usuario: userId,
-    metodo: method,
-    referencia: reference,
-    direccionEntrega: deliveryAddress,
-  });
-
-  return response.data;
+const getQuote = async () => (await Axios.get('/carrito/cotizacion')).data;
+const pendingKey = userId => 'plantopia.pendingPurchase.' + userId;
+const getPendingPurchase = userId => {
+  try { return JSON.parse(sessionStorage.getItem(pendingKey(userId))); } catch { return null; }
+};
+const processPurchase = async (userId, { quoteHash, deliveryAddress } = {}) => {
+  let pending = getPendingPurchase(userId);
+  if (!pending) {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    pending = { key: Array.from(bytes, n => n.toString(16).padStart(2, '0')).join(''), payload: { metodo: 'efectivo', quoteHash, direccionEntrega: deliveryAddress } };
+    sessionStorage.setItem(pendingKey(userId), JSON.stringify(pending));
+  }
+  try {
+    const response = await Axios.post('/procesarCompra', pending.payload, { headers: { 'Idempotency-Key': pending.key } });
+    sessionStorage.removeItem(pendingKey(userId));
+    return response.data;
+  } catch (error) {
+    if ([400, 403, 404, 409].includes(error.response?.status)) sessionStorage.removeItem(pendingKey(userId));
+    throw error;
+  }
 };
 
 export {
+  getQuote, getPendingPurchase,
   addProductToCart,
   createCartItem,
   deleteCartItem,

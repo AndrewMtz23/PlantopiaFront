@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Axios from "axios";
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -9,21 +9,20 @@ import { Alert, Button, Table, Form, Container, Card, Row, Col } from "react-boo
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import '../css/Catalogo.css';
-import { PayPalButton } from "react-paypal-button-v2";
 import Footer from '../decoraciones/footer';
 import { getSessionData, isAuthenticated } from "../../utils/session";
-import { deleteCartItem, getCart, processPurchase, updateCartItem } from "../../services/cartService";
+import { deleteCartItem, getCart, getQuote, getPendingPurchase, processPurchase, updateCartItem } from "../../services/cartService";
 import PublicHeader from "../shared/PublicHeader";
 import ProductImage from "../shared/ProductImage";
 import BranchMap from "../admin/BranchMap";
 
-const PAYPAL_CLIENT_ID = process.env.REACT_APP_PAYPAL_CLIENT_ID;
 
 const CartView = () => {
   const [carrito, setCarrito] = useState([]);
   const [error, setError] = useState(null);
-  const [total, setTotal] = useState(0);
-  const [pagarConPayPal, setPagarConPayPal] = useState(false);
+  const [quote, setQuote] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const inFlight = useRef(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState({
     nombre: "",
@@ -42,6 +41,7 @@ const CartView = () => {
   const userId = sessionData?.idUsuario;
   const isUserLoggedIn = isAuthenticated(sessionData);
   const navigate = useNavigate();
+  const pending = getPendingPurchase(userId);
 
   const obtenerCarrito = useCallback(async () => {
     if (!userId) {
@@ -52,14 +52,11 @@ const CartView = () => {
       const cartItems = await getCart(userId);
       setCarrito(cartItems);
 
-      const totalCarrito = cartItems.reduce(
-        (accumulator, item) => accumulator + item.subtotal,
-        0
-      );
-      setTotal(totalCarrito);
+      setQuote(await getQuote());
     } catch (fetchError) {
       console.error("Error al obtener el carrito:", fetchError);
-      setError("Error al obtener el carrito");
+      setQuote(null);
+      setError("No se pudo actualizar el carrito. Revisa disponibilidad antes de comprar.");
     }
   }, [userId]);
 
@@ -184,15 +181,12 @@ const CartView = () => {
 
     if (
       !deliveryAddress.codigoPostal ||
-      deliveryAddress.codigoPostal.length < 5 ||
-      deliveryAddress.codigoPostal.length > 10
+      deliveryAddress.codigoPostal.length !== 5
     ) {
-      return "El codigo postal de entrega debe tener entre 5 y 10 digitos.";
+      return "El codigo postal de entrega debe tener 5 digitos.";
     }
 
-    if (!deliveryAddress.latitud || !deliveryAddress.longitud) {
-      return "Marca el punto de entrega en el mapa.";
-    }
+
 
     return null;
   };
@@ -203,30 +197,22 @@ const CartView = () => {
     }
   };
 
-  const realizarPago = async (method = "efectivo", reference = null) => {
-    const addressError = validarDireccionEntrega();
-
-    if (addressError) {
-      setError(addressError);
-      return;
+  const realizarPago = async () => {
+    if (inFlight.current) return;
+    if (!pending) {
+      const addressError = validarDireccionEntrega();
+      if (addressError) { setError(addressError); return; }
+      if (!quote) { setError('Actualiza el carrito antes de confirmar.'); return; }
     }
-
+    inFlight.current = true;
+    setSubmitting(true);
     try {
-      const compraProcesada = await processPurchase(userId, {
-        method,
-        reference,
-        deliveryAddress,
-      });
-
-      setCarrito([]);
-      setTotal(0);
-      navigate(`/compra-confirmada/${compraProcesada.pagoId}`, {
-        replace: true,
-      });
-    } catch (paymentError) {
-      console.error("Error al realizar el pago:", paymentError);
-      setError(paymentError.response?.data?.error || "Error al realizar el pago");
-    }
+      const result = await processPurchase(userId, { quoteHash: quote?.quoteHash, deliveryAddress });
+      navigate('/compra-confirmada/' + result.pagoId, { replace: true });
+    } catch (error) {
+      setError(error.response?.data?.error?.message || error.response?.data?.error || 'No se pudo confirmar. Reintenta para consultar el mismo pedido.');
+      if (error.response?.status === 409) await obtenerCarrito();
+    } finally { inFlight.current = false; setSubmitting(false); }
   };
 
   if (!isUserLoggedIn) {
@@ -253,6 +239,7 @@ const CartView = () => {
       <main className="cart-page__main">
         <Container className="cart-page__shell">
           {error && <Alert variant="danger">{error}</Alert>}
+            {pending && <Alert variant="warning">Hay un pedido pendiente de confirmar. El reintento conserva su direccion y total originales. <Button disabled={submitting} onClick={realizarPago}>Reintentar mismo pedido</Button></Alert>}
           {carrito.length === 0 ? (
             <Alert variant="info" className="cart-page__empty">
               El carrito esta vacio. <Link to="/Catalogo">Continua comprando</Link>
@@ -286,8 +273,8 @@ const CartView = () => {
                           <td>{item.nombre}</td>
                           <td>{item.detalles}</td>
                           <td>{item.cantidad}</td>
-                          <td>${item.precioVenta.toFixed(2)}</td>
-                          <td>${item.subtotal.toFixed(2)}</td>
+                          <td>${Number(item.precioVenta).toFixed(2)}</td>
+                          <td>${Number(item.subtotal).toFixed(2)}</td>
                           <td className="commerce-table__actions">
                             <Button
                               variant="outline-success"
@@ -297,7 +284,7 @@ const CartView = () => {
                                 editarItemCarrito(
                                   item.id,
                                   item.cantidad + 1,
-                                  item.subtotal + item.precioVenta
+                                  Number(item.subtotal) + Number(item.precioVenta)
                                 )
                               }
                               disabled={item.cantidad >= item.inventario_cant}
@@ -508,20 +495,20 @@ const CartView = () => {
                       <h4 className="mb-3">Resumen del pedido</h4>
                       <div className="d-flex justify-content-between mb-2">
                         <span>Subtotal:</span>
-                        <span>${total.toFixed(2)}</span>
+                        <span>${quote?.subtotal || "0.00"}</span>
                       </div>
                       <div className="d-flex justify-content-between mb-2">
                         <span>IVA (16%):</span>
-                        <span>${(total * 0.16).toFixed(2)}</span>
+                        <span>${quote?.iva || "0.00"}</span>
                       </div>
                       <div className="d-flex justify-content-between mb-2">
                         <span>Envio:</span>
-                        <span>$50.00</span>
+                        <span>${quote?.envio || "0.00"}</span>
                       </div>
                       <hr />
                       <div className="d-flex justify-content-between">
                         <strong>Total:</strong>
-                        <strong>${(total * 1.16 + 50).toFixed(2)}</strong>
+                        <strong>${quote?.total || "0.00"}</strong>
                       </div>
                     </Card.Body>
                   </Card>
@@ -532,33 +519,11 @@ const CartView = () => {
                 <Card.Body className="commerce-card__body">
                   <h4 className="mb-3">Metodo de pago</h4>
                   <div className="commerce-payment">
-                    <Form.Check
-                      type="checkbox"
-                      label="Pagar con PayPal"
-                      checked={pagarConPayPal}
-                      onChange={() => setPagarConPayPal(!pagarConPayPal)}
-                      disabled={!PAYPAL_CLIENT_ID}
-                      className="mb-2"
-                    />
-                    <Button variant="success" className="commerce-pay-button" onClick={() => realizarPago("efectivo")}>
+                    <Button variant="success" className="commerce-pay-button" disabled={submitting || !quote || Boolean(pending)} onClick={realizarPago}>
                       <FontAwesomeIcon icon={faCreditCard} className="mr-2" />
-                      Pago en efectivo
+                      Confirmar pedido en efectivo
                     </Button>
                   </div>
-                  {pagarConPayPal && (
-                    <div className="mt-3">
-                      <PayPalButton
-                        amount={(total * 1.16 + 50).toFixed(2)}
-                        onSuccess={(details) => {
-                          realizarPago("paypal", details?.id || null);
-                        }}
-                        options={{
-                          clientId: PAYPAL_CLIENT_ID,
-                          currency: "MXN",
-                        }}
-                      />
-                    </div>
-                  )}
                 </Card.Body>
               </Card>
             </>
