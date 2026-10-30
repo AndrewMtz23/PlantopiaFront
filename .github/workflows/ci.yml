@@ -16,6 +16,7 @@ jobs:
       - run: npm test -- --watchAll=false --runInBand
         env:
           CI: 'true'
+          REACT_APP_API_URL: https://api.example.invalid
       - run: npm run build
         env:
           CI: 'true'
