@@ -1,0 +1,46 @@
+{
+  "expires": "2026-11-12",
+  "reason": "Legacy CRA build/development tooling only; no untrusted source assets, no publicly exposed dev server. Replace tooling in follow-up.",
+  "advisories": [
+    {
+      "source": 1095141,
+      "name": "nth-check",
+      "url": "https://github.com/advisories/GHSA-rp65-9cf3-cjxr"
+    },
+    {
+      "source": 1124252,
+      "name": "postcss",
+      "url": "https://github.com/advisories/GHSA-6g55-p6wh-862q"
+    },
+    {
+      "source": 1139510,
+      "name": "postcss",
+      "url": "https://github.com/advisories/GHSA-r28c-9q8g-f849"
+    },
+    {
+      "source": 1113686,
+      "name": "serialize-javascript",
+      "url": "https://github.com/advisories/GHSA-5c6j-r48x-rmvq"
+    },
+    {
+      "source": 1139520,
+      "name": "svgo",
+      "url": "https://github.com/advisories/GHSA-2p49-hgcm-8545"
+    },
+    {
+      "source": 1243426,
+      "name": "svgo",
+      "url": "https://github.com/advisories/GHSA-w27v-7q3p-w38r"
+    },
+    {
+      "source": 1117689,
+      "name": "underscore",
+      "url": "https://github.com/advisories/GHSA-qpx9-hpmf-5gmw"
+    },
+    {
+      "source": 1240027,
+      "name": "webpack-dev-middleware",
+      "url": "https://github.com/advisories/GHSA-g84c-rxfj-3j2c"
+    }
+  ]
+}
