@@ -2,7 +2,7 @@ import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 import JsBarcode from "jsbarcode";
 
-pdfMake.vfs = pdfFonts.pdfMake.vfs;
+pdfMake.vfs = pdfFonts.pdfMake?.vfs || pdfFonts;
 
 const BRAND_GREEN = "#24b36b";
 const BRAND_DARK = "#163328";
@@ -18,16 +18,18 @@ const buildMetaRow = (label, value, bold = false) => ([
   { text: value || "-", bold, color: INK, alignment: "right", margin: [0, 0, 0, 2] },
 ]);
 
-export const generarFacturaPDF = (carrito, total, detallesEmpresa) => {
+export const generarFacturaPDF = (carrito, pago, detallesEmpresa) => {
   if (!Array.isArray(carrito) || carrito.length === 0) {
     return;
   }
 
   const datosUsuario = carrito[0];
-  const montoIVA = Number(total || 0) * 0.16;
-  const totalFinal = Number(total || 0) + montoIVA;
-  const numeroFactura = `F-${String(Math.floor(Math.random() * 9000) + 1000)}`;
-  const fechaActual = new Date().toLocaleDateString("es-MX");
+  if (!pago?.id) throw new Error('Se requiere un pedido registrado para generar el comprobante.');
+  const total = pago.subtotal;
+  const montoIVA = pago.iva;
+  const totalFinal = pago.total;
+  const numeroFactura = `P-${pago.id}`;
+  const fechaActual = new Date(pago.fechaRegistro).toLocaleDateString("es-MX");
 
   const canvas = document.createElement("canvas");
   JsBarcode(canvas, numeroFactura, {
@@ -74,7 +76,7 @@ export const generarFacturaPDF = (carrito, total, detallesEmpresa) => {
             width: "*",
             stack: [
               { text: detallesEmpresa.nombre || "Plantopia", style: "brand" },
-              { text: "Factura de compra", style: "brandSubline" },
+              { text: "Comprobante de pedido", style: "brandSubline" },
               {
                 text: [
                   `${detallesEmpresa.ubicacion || ""}\n`,
@@ -92,7 +94,7 @@ export const generarFacturaPDF = (carrito, total, detallesEmpresa) => {
               body: [[
                 {
                   stack: [
-                    { text: "FACTURA", style: "invoiceWord" },
+                    { text: "PEDIDO", style: "invoiceWord" },
                     { text: numeroFactura, style: "invoiceNumber" },
                     { text: `Fecha de emision: ${fechaActual}`, style: "invoiceMeta" },
                   ],
@@ -154,8 +156,8 @@ export const generarFacturaPDF = (carrito, total, detallesEmpresa) => {
                   widths: ["*", "auto"],
                   body: [
                     buildMetaRow("Productos", String(carrito.length)),
-                    buildMetaRow("Metodo", "Pago procesado"),
-                    buildMetaRow("Estado", "Completado", true),
+                    buildMetaRow("Metodo", pago.metodo),
+                    buildMetaRow("Estado de pago", pago.estado, true),
                   ],
                 },
                 layout: "noBorders",
@@ -195,6 +197,7 @@ export const generarFacturaPDF = (carrito, total, detallesEmpresa) => {
               body: [
                 buildMetaRow("Subtotal", currency(total)),
                 buildMetaRow("IVA (16%)", currency(montoIVA)),
+                buildMetaRow("Envio", currency(pago.envio)),
                 [
                   { text: "Total", style: "totalLabel" },
                   { text: currency(totalFinal), style: "totalValue", alignment: "right" },
@@ -229,7 +232,7 @@ export const generarFacturaPDF = (carrito, total, detallesEmpresa) => {
             stack: [
               { text: "Notas", style: "microTitle" },
               {
-                text: "Conserva este comprobante como respaldo de tu compra. Si necesitas ayuda con entrega o seguimiento, contactanos usando los datos de Plantopia.",
+                text: pago.estado === 'pendiente' ? 'Pedido pendiente de cobro. Este comprobante no acredita un pago recibido.' : 'Conserva este comprobante de pedido. No es una factura fiscal.',
                 style: "note",
                 margin: [0, 8, 0, 0],
               },

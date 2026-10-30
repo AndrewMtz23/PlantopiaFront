@@ -85,6 +85,7 @@ const formatDeliveryAddress = (address = {}) =>
 const getDeliveryStatusLabel = (status) => {
   const labels = {
     preparando: "Preparando",
+    listo: "Listo para reparto",
     enviado: "Enviado",
     entregado: "Entregado",
     cancelado: "Cancelado",
@@ -180,7 +181,7 @@ const PurchaseConfirmationView = () => {
       subtotal: Number(item.total || 0),
     }));
 
-    generarFacturaPDF(items, Number(purchase.pago?.subtotal || 0), DETAILS_EMPRESA);
+    generarFacturaPDF(items, purchase.pago, DETAILS_EMPRESA);
   };
 
   const handleSearch = (event) => {
@@ -222,11 +223,10 @@ const PurchaseConfirmationView = () => {
                   <span className="purchase-confirmation-hero__icon">
                     <FontAwesomeIcon icon={faCircleCheck} />
                   </span>
-                  <span className="public-page-hero__eyebrow">Compra confirmada</span>
+                  <span className="public-page-hero__eyebrow">Pedido registrado</span>
                   <h1 className="public-page-hero__title">Tu pedido ya esta registrado</h1>
                   <p className="public-page-hero__copy">
-                    Guardamos el folio de compra, actualizamos inventario y dejamos tu
-                    comprobante listo para descargar.
+                    {purchase.pago.estado === "pendiente" ? "Pendiente de cobro en efectivo. Este comprobante acredita el pedido, no el pago." : "Consulta el estado de tu pedido y su comprobante."}
                   </p>
                   <div className="public-inline-actions">
                     <button type="button" className="public-button public-button--primary" onClick={generateInvoice}>

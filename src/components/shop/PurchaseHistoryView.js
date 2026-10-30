@@ -79,6 +79,7 @@ const formatDeliveryAddress = (address = {}) =>
 const getDeliveryStatusLabel = (status) => {
   const labels = {
     preparando: "Preparando",
+    listo: "Listo para reparto",
     enviado: "Enviado",
     entregado: "Entregado",
     cancelado: "Cancelado",
@@ -229,7 +230,7 @@ const PurchaseHistoryView = () => {
       subtotal: Number(item.total || 0),
     }));
 
-    generarFacturaPDF(items, Number(selectedPurchase.pago?.subtotal || 0), DETAILS_EMPRESA);
+    generarFacturaPDF(items, selectedPurchase.pago, DETAILS_EMPRESA);
   };
 
   const handleSearch = (event) => {
