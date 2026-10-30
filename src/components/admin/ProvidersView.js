@@ -23,7 +23,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import AdminShell from "./AdminShell";
 
-pdfMake.vfs = pdfFonts.pdfMake.vfs;
+pdfMake.vfs = pdfFonts.pdfMake?.vfs || pdfFonts;
 
 const getStatusLabel = (estatus) =>
   Number(estatus) === 1 ? "Activo" : "Inactivo";

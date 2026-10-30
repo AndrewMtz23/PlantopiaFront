@@ -1,7 +1,7 @@
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 
-pdfMake.vfs = pdfFonts.pdfMake.vfs;
+pdfMake.vfs = pdfFonts.pdfMake?.vfs || pdfFonts;
 
 export const generarPDF = (productos) => {
   const productosPDF = productos.map((producto) => [

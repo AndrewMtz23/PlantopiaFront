@@ -24,7 +24,7 @@ import {
 import AdminShell from "./AdminShell";
 import BranchMap from "./BranchMap";
 
-pdfMake.vfs = pdfFonts.pdfMake.vfs;
+pdfMake.vfs = pdfFonts.pdfMake?.vfs || pdfFonts;
 
 const getStatusLabel = (estatus) =>
   Number(estatus) === 1 ? "Activo" : "Inactivo";
